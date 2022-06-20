@@ -17,6 +17,7 @@ class Time extends React.Component {
         <Slider marks={this.marks} step={null}
           defaultValue={60} min={60} max={90}
           onChange={this.props.onSelectTime}
+          trackStyle={{backgroundColor: '#f5f5f5'}}
         />
       </div>
     )
