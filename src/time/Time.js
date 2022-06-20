@@ -1,5 +1,6 @@
 import { Slider } from 'antd';
 import React from 'react';
+import './Time.css'
 
 class Time extends React.Component {
   constructor(props) {
@@ -12,8 +13,11 @@ class Time extends React.Component {
   
   render() {
     return (
-      <div>
-        <Slider marks={this.marks} step={null} defaultValue={60} min={60} max={90} onChange={this.props.onSelectTime} />
+      <div id="timeline">
+        <Slider marks={this.marks} step={null}
+          defaultValue={60} min={60} max={90}
+          onChange={this.props.onSelectTime}
+        />
       </div>
     )
   }

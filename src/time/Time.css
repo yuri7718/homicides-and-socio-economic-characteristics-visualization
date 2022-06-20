@@ -1,0 +1,8 @@
+#timeline {
+  display: flex;
+  justify-content: center;
+}
+
+.ant-slider {
+  width: 70%;
+}

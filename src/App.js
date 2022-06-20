@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import './App.css';
 import { Layout, Row, Col, Card } from 'antd';
 import * as d3 from 'd3';
-import nat from './assets/NAT_preprocessed.csv';
+import natCounties from './assets/NAT_counties.csv';
+import natStates from './assets/NAT_states.csv';
 import Feature from './feature/Feature';
 import Time from './time/Time';
 
@@ -11,7 +12,8 @@ class App extends React.Component {
     super(props);
     
     this.state = {
-      dataset: [],
+      countyDataset: [],
+      stateDataset: [],
       feature: 'HR',
       year: 60
     };
@@ -44,8 +46,11 @@ class App extends React.Component {
   }
 
   componentDidMount() {
-    d3.csv(nat).then(data => {
-      this.setState({dataset: data});
+    d3.csv(natCounties).then(data => {
+      this.setState({countyDataset: data});
+    });
+    d3.csv(natStates).then(data => {
+      this.setState({stateDataset: data});
     });
   }
 
@@ -84,29 +89,29 @@ class App extends React.Component {
               </Card>
             </Col>
             <Col span={14} >
-              <Card style={{height:firstRowHeight}}>
+              <Card style={{height: firstRowHeight}}>
                 <Time
                   timeline={this.years}
                   onSelectTime={this.selectTime}
                 />
+                <div>dafdf</div>
               </Card>
             </Col>
             <Col span={6} >
-              <Card style={{height:firstRowHeight}}></Card>
+              <Card style={{height: firstRowHeight}}></Card>
             </Col>
             <Col span={8} >
-              <Card style={{height:secondRowHeight}}>adfdf</Card>
+              <Card style={{height: secondRowHeight}}>adfdf</Card>
             </Col>
             <Col span={8} >
-              <Card style={{height:secondRowHeight}}>adfdf</Card>
+              <Card style={{height: secondRowHeight}}>adfdf</Card>
             </Col>
             <Col span={8} >
-              <Card style={{height:secondRowHeight}}>adfdf</Card>
+              <Card style={{height: secondRowHeight}}>adfdf</Card>
             </Col>
           </Row>
         </Layout>
       </div>
-
     );
   }
 }
