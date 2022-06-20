@@ -1,0 +1,114 @@
+import React, { useState, useEffect } from 'react';
+import './App.css';
+import { Layout, Row, Col, Card } from 'antd';
+import * as d3 from 'd3';
+import nat from './assets/NAT_preprocessed.csv';
+import Feature from './feature/Feature';
+import Time from './time/Time';
+
+class App extends React.Component {
+  constructor(props) {
+    super(props);
+    
+    this.state = {
+      dataset: [],
+      feature: 'HR',
+      year: 60
+    };
+
+    this.features = [
+      {key: 'HR', feature: 'Homicide rate'},
+      {key: 'UE', feature: 'Unemployment rate'},
+      {key: 'DV', feature: 'Divorce rate'},
+      {key: 'MA', feature: 'Median age'},
+      {key: 'DNL', feature: 'Population density'},
+      {key: 'MFIL', feature: 'Median family income'},
+      {key: 'FP', feature: 'Percentage of families below poverty'},
+      {key: 'BLK', feature: 'Percentage of black population'},
+      {key: 'GI', feature: 'Gini index'},
+      {key: 'FH', feature: 'Percentage of female headed households'}
+    ];
+    this.years = [60, 70, 80, 90];
+
+    this.selectFeature = this.selectFeature.bind(this);
+    this.selectTime = this.selectTime.bind(this);
+  }
+
+  selectFeature(e) {
+    e.preventDefault();
+    this.setState({feature: e.currentTarget.accessKey});
+  }
+
+  selectTime(year) {
+    this.setState({year: year});
+  }
+
+  componentDidMount() {
+    d3.csv(nat).then(data => {
+      this.setState({dataset: data});
+    });
+  }
+
+  render() {
+    const firstRowHeight = 700;
+    const secondRowHeight = 500;
+    console.log(this.state)
+    return (
+      /*<div className="App">
+        <header className="App-header">
+          <img src={logo} className="App-logo" alt="logo" />
+          <p>
+            Edit <code>src/App.js</code> and save to reload.
+          </p>
+          <a
+            className="App-link"
+            href="https://reactjs.org"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            Learn React
+          </a>
+        </header>
+      </div>*/
+      
+      <div className="App">
+        <Layout className="layout">
+          <Row gutter={[16, 16]}>
+            <Col span={4} >
+              <Card style={{height: firstRowHeight}}>
+                <Feature
+                  featureList={this.features}
+                  currentFeature={this.state.feature}
+                  onSelectFeature={this.selectFeature}
+                />
+              </Card>
+            </Col>
+            <Col span={14} >
+              <Card style={{height:firstRowHeight}}>
+                <Time
+                  timeline={this.years}
+                  onSelectTime={this.selectTime}
+                />
+              </Card>
+            </Col>
+            <Col span={6} >
+              <Card style={{height:firstRowHeight}}></Card>
+            </Col>
+            <Col span={8} >
+              <Card style={{height:secondRowHeight}}>adfdf</Card>
+            </Col>
+            <Col span={8} >
+              <Card style={{height:secondRowHeight}}>adfdf</Card>
+            </Col>
+            <Col span={8} >
+              <Card style={{height:secondRowHeight}}>adfdf</Card>
+            </Col>
+          </Row>
+        </Layout>
+      </div>
+
+    );
+  }
+}
+
+export default App;
