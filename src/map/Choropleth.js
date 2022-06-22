@@ -65,7 +65,7 @@ class Choropleth extends React.Component {
         .attr('fill', d => colorScale(d.properties[property]))
         .attr('d', path)
         .style("stroke", "#000000")
-        .on('click', (e, d) => this.props.onSelectRegion(d.properties.STATE_NAME, ''));
+        .on('click', (e, d) => this.props.onSelectRegion(d.properties.STATE_NAME, d.properties.NAME));
     }
 
     // zoom function

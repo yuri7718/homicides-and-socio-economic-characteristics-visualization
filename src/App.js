@@ -64,6 +64,10 @@ class App extends React.Component {
     });
   }
 
+  componentDidUpdate() {
+    console.log(this.state)
+  }
+
   render() {
     const firstRowHeight = 700;
     const secondRowHeight = 500;
