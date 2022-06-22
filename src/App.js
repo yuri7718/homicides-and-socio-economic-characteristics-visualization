@@ -6,6 +6,9 @@ import natCounties from './assets/NAT_counties.csv';
 import natStates from './assets/NAT_states.csv';
 import Feature from './feature/Feature';
 import Time from './time/Time';
+import Choropleth from './map/Choropleth';
+import OriginalMapD3 from './map/originMapD3';
+import natGeojson from './assets/NAT.geojson';
 
 class App extends React.Component {
   constructor(props) {
@@ -57,7 +60,7 @@ class App extends React.Component {
   render() {
     const firstRowHeight = 700;
     const secondRowHeight = 500;
-    console.log(this.state)
+    //console.log(this.state)
     return (
       /*<div className="App">
         <header className="App-header">
@@ -94,7 +97,11 @@ class App extends React.Component {
                   timeline={this.years}
                   onSelectTime={this.selectTime}
                 />
-                <div>dafdf</div>
+                <Choropleth
+                  geojson={natGeojson}
+                  currentFeature={this.state.feature}
+                  currentYear={this.state.year}
+                />
               </Card>
             </Col>
             <Col span={6} >
