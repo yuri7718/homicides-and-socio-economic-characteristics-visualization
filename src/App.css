@@ -44,3 +44,7 @@
   min-height: 100vh;
   padding: 15px;
 }
+
+.ant-card-body {
+  height: 100%;
+}

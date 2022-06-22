@@ -6,6 +6,9 @@ import natCounties from './assets/NAT_counties.csv';
 import natStates from './assets/NAT_states.csv';
 import Feature from './feature/Feature';
 import Time from './time/Time';
+import Choropleth from './map/Choropleth';
+import natGeojson from './assets/NAT.geojson';
+import statesGeojson from './assets/US_states.geojson';
 
 class App extends React.Component {
   constructor(props) {
@@ -15,7 +18,9 @@ class App extends React.Component {
       countyDataset: [],
       stateDataset: [],
       feature: 'HR',
-      year: 60
+      year: 60,
+      state: '',
+      county: ''
     };
 
     this.features = [
@@ -34,6 +39,7 @@ class App extends React.Component {
 
     this.selectFeature = this.selectFeature.bind(this);
     this.selectTime = this.selectTime.bind(this);
+    this.selectRegion = this.selectRegion.bind(this);
   }
 
   selectFeature(e) {
@@ -45,6 +51,10 @@ class App extends React.Component {
     this.setState({year: year});
   }
 
+  selectRegion(state, county) {
+    this.setState({state: state, county: county})
+  }
+
   componentDidMount() {
     d3.csv(natCounties).then(data => {
       this.setState({countyDataset: data});
@@ -54,10 +64,14 @@ class App extends React.Component {
     });
   }
 
+  componentDidUpdate() {
+    console.log(this.state)
+  }
+
   render() {
     const firstRowHeight = 700;
     const secondRowHeight = 500;
-    console.log(this.state)
+    //console.log(this.state)
     return (
       /*<div className="App">
         <header className="App-header">
@@ -94,7 +108,14 @@ class App extends React.Component {
                   timeline={this.years}
                   onSelectTime={this.selectTime}
                 />
-                <div>dafdf</div>
+                <Choropleth
+                  stateGeojson={statesGeojson}
+                  stateDataset={this.state.stateDataset}
+                  countyGeojson={natGeojson}
+                  currentFeature={this.state.feature}
+                  currentYear={this.state.year}
+                  onSelectRegion={this.selectRegion}
+                />
               </Card>
             </Col>
             <Col span={6} >
