@@ -7,8 +7,8 @@ import natStates from './assets/NAT_states.csv';
 import Feature from './feature/Feature';
 import Time from './time/Time';
 import Choropleth from './map/Choropleth';
-import OriginalMapD3 from './map/originMapD3';
 import natGeojson from './assets/NAT.geojson';
+import statesGeojson from './assets/US_states.geojson';
 
 class App extends React.Component {
   constructor(props) {
@@ -18,7 +18,9 @@ class App extends React.Component {
       countyDataset: [],
       stateDataset: [],
       feature: 'HR',
-      year: 60
+      year: 60,
+      state: '',
+      county: ''
     };
 
     this.features = [
@@ -37,6 +39,7 @@ class App extends React.Component {
 
     this.selectFeature = this.selectFeature.bind(this);
     this.selectTime = this.selectTime.bind(this);
+    this.selectRegion = this.selectRegion.bind(this);
   }
 
   selectFeature(e) {
@@ -46,6 +49,10 @@ class App extends React.Component {
 
   selectTime(year) {
     this.setState({year: year});
+  }
+
+  selectRegion(state, county) {
+    this.setState({state: state, county: county})
   }
 
   componentDidMount() {
@@ -98,9 +105,12 @@ class App extends React.Component {
                   onSelectTime={this.selectTime}
                 />
                 <Choropleth
-                  geojson={natGeojson}
+                  stateGeojson={statesGeojson}
+                  stateDataset={this.state.stateDataset}
+                  countyGeojson={natGeojson}
                   currentFeature={this.state.feature}
                   currentYear={this.state.year}
+                  onSelectRegion={this.selectRegion}
                 />
               </Card>
             </Col>
