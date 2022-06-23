@@ -45,7 +45,7 @@ class Choropleth extends React.Component {
 
     d3.selectAll('#' + this.STATE_MAP_ID).remove();
     d3.selectAll('#' + this.COUNTY_MAP_ID).remove();
-    const svg = d3.select('svg');
+    const svg = d3.select('#map');
 
     this.drawStates(svg, stateColorScale, path);
     this.drawCounties(svg, countyColorScale, path);
@@ -141,7 +141,7 @@ class Choropleth extends React.Component {
   render() {
     return (
       <div style={{height: '100%'}} ref={this.canvasRef}>
-        <svg style={{width: '100%', height: '100%'}}></svg>
+        <svg id="map" style={{width: '100%', height: '100%'}}></svg>
       </div>
     );
   }
