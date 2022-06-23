@@ -114,6 +114,7 @@ class App extends React.Component {
                   countyGeojson={natGeojson}
                   currentFeature={this.state.feature}
                   currentYear={this.state.year}
+                  years={this.years}
                   onSelectRegion={this.selectRegion}
                 />
               </Card>
