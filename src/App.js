@@ -9,6 +9,7 @@ import Time from './time/Time';
 import Choropleth from './map/Choropleth';
 import natGeojson from './assets/NAT.geojson';
 import statesGeojson from './assets/US_states.geojson';
+import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
 
 class App extends React.Component {
   constructor(props) {
@@ -38,7 +39,7 @@ class App extends React.Component {
     this.years = [60, 70, 80, 90];
 
     this.selectFeature = this.selectFeature.bind(this);
-    this.selectTime = this.selectTime.bind(this);
+    //this.selectTime = this.selectTime.bind(this);
     this.selectRegion = this.selectRegion.bind(this);
   }
 
@@ -47,20 +48,20 @@ class App extends React.Component {
     this.setState({feature: e.currentTarget.accessKey});
   }
 
-  selectTime(year) {
+  selectTime = (year) => {
     this.setState({year: year});
-  }
+  };
 
   selectRegion(state, county) {
     this.setState({state: state, county: county})
   }
 
   componentDidMount() {
-    d3.csv(natCounties).then(data => {
-      this.setState({countyDataset: data});
-    });
-    d3.csv(natStates).then(data => {
-      this.setState({stateDataset: data});
+  }
+
+  fetchData() {
+    Promise.all([d3.csv(natCounties), d3.csv(natStates)]).then(data => {
+      this.setState({countyDataset: data[0], stateDataset: data[1]});
     });
   }
 
@@ -69,6 +70,9 @@ class App extends React.Component {
   }
 
   render() {
+    if (this.state.countyDataset.length === 0 || this.state.stateDataset.length === 0) {
+      this.fetchData();
+    }
     const firstRowHeight = 700;
     const secondRowHeight = 500;
     //console.log(this.state)
@@ -122,11 +126,13 @@ class App extends React.Component {
             <Col span={6} >
               <Card style={{height: firstRowHeight}}></Card>
             </Col>
-            <Col span={8} >
-              <Card style={{height: secondRowHeight}}>adfdf</Card>
-            </Col>
-            <Col span={8} >
-              <Card style={{height: secondRowHeight}}>adfdf</Card>
+            <Col span={16} >
+              <Card style={{height: secondRowHeight}}>
+                <ParallelCoordinates
+                  stateCSV={this.state.stateDataset}
+                  currentYear={this.state.year}
+                />
+              </Card>
             </Col>
             <Col span={8} >
               <Card style={{height: secondRowHeight}}>adfdf</Card>

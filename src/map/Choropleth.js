@@ -43,8 +43,9 @@ class Choropleth extends React.Component {
     const stateColorScale = getColorScale(featureExtrema, this.STATE_COLORS);
     const countyColorScale = getColorScale(featureExtrema, this.COUNTY_COLORS);
 
-    d3.selectAll('g').remove();
-    const svg = d3.select('svg');
+    d3.selectAll('#' + this.STATE_MAP_ID).remove();
+    d3.selectAll('#' + this.COUNTY_MAP_ID).remove();
+    const svg = d3.select('#map');
 
     this.drawStates(svg, stateColorScale, path);
     this.drawCounties(svg, countyColorScale, path);
@@ -56,8 +57,10 @@ class Choropleth extends React.Component {
     // zoom function
     const zoomed = event => {
       const {transform} = event;
-      d3.selectAll('g').attr('transform', transform);
-      d3.selectAll('g').attr('stroke-width', 1 / transform.k);
+      d3.selectAll('#' + this.STATE_MAP_ID).attr('transform', transform);
+      d3.selectAll('#' + this.COUNTY_MAP_ID).attr('transform', transform);
+      d3.selectAll('#' + this.STATE_MAP_ID).attr('stroke-width', 1 / transform.k);
+      d3.selectAll('#' + this.COUNTY_MAP_ID).attr('stroke-width', 1 / transform.k);
       this.setState({x: transform.x, y: transform.y, zoomScale: transform.k}, this.updateZoomedView(this.state.zoomScale));
     };
 
@@ -138,7 +141,7 @@ class Choropleth extends React.Component {
   render() {
     return (
       <div style={{height: '100%'}} ref={this.canvasRef}>
-        <svg style={{width: '100%', height: '100%'}}></svg>
+        <svg id="map" style={{width: '100%', height: '100%'}}></svg>
       </div>
     );
   }
