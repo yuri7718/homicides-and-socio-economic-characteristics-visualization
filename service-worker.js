@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/3.6.3/workbox-sw.js");
 
 importScripts(
-  "/ncovr-viz/precache-manifest.5790f065fa2a9bdb79a898c4574589d6.js"
+  "/ncovr-visualization/precache-manifest.786a67ce5ab9e817e45e0fe697398af6.js"
 );
 
 workbox.clientsClaim();
@@ -28,7 +28,7 @@ self.__precacheManifest = [].concat(self.__precacheManifest || []);
 workbox.precaching.suppressWarnings();
 workbox.precaching.precacheAndRoute(self.__precacheManifest, {});
 
-workbox.routing.registerNavigationRoute("/ncovr-viz/index.html", {
+workbox.routing.registerNavigationRoute("/ncovr-visualization/index.html", {
   
   blacklist: [/^\/_/,/\/[^/]+\.[^/]+$/],
 });
