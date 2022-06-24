@@ -11,7 +11,7 @@ export function getColorScale(featureExtrema, nColors) {
   
   return d3.scaleQuantile()
     .domain(d3.extent(featureExtrema))
-    .range(d3.schemeBrBG[nColors]);
+    .range(d3.schemeGnBu[nColors]);
 }
 
 /**
@@ -37,12 +37,32 @@ export function getExtrema(feature, years, dataGeojson) {
   return featureExtrema;
 }
 
+
 export function showMap(mapID) {
-  d3.select(mapID)
+  d3.selectAll(mapID)
     .style('visibility', 'visible');
 }
 
 export function hideMap(mapID) {
-  d3.select(mapID)
+  d3.selectAll(mapID)
     .style('visibility', 'hidden');
+}
+
+export function hideStateLegend(stateLegend) {
+  stateLegend.style('visibility', 'hidden');
+}
+
+export function showStateLegend(stateLegend) {
+  stateLegend.style('visibility', 'visible');
+}
+
+export function getTooltipText(region, feature, value, year) {
+  const roundedValue = value.toFixed(2);
+  const html =
+  `<div>
+    <p><b>${region}<b></p>
+    <p><b>${feature}: </b>${roundedValue}<p>
+    <p><b>Year: </b>19${year}</p>
+  </div>`
+  return html;
 }

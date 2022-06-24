@@ -1,6 +1,7 @@
 {
-  "name": "inf8808-project",
+  "name": "ncovr-viz",
   "version": "0.1.0",
+  "homepage": "https://yuri7718.github.io/ncovr-viz/",
   "private": true,
   "dependencies": {
     "@testing-library/jest-dom": "^5.16.4",
@@ -8,13 +9,17 @@
     "@testing-library/user-event": "^13.5.0",
     "antd": "^4.20.7",
     "d3": "^7.4.4",
+    "d3-svg-legend": "^2.25.6",
     "react": "^18.1.0",
     "react-dom": "^18.1.0",
     "react-infinite-scroll-component": "^6.1.0",
     "react-scripts": "^2.1.3",
+    "serve": "^13.0.2",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -37,5 +42,9 @@
       "last 1 firefox version",
       "last 1 safari version"
     ]
+  },
+  "devDependencies": {
+    "d3-legend": "^1.0.0",
+    "gh-pages": "^4.0.0"
   }
 }
