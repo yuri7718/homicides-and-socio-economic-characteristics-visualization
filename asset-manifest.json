@@ -1,0 +1,21 @@
+{
+  "main.css": "/ncovr-viz/static/css/main.037d223d.chunk.css",
+  "main.js": "/ncovr-viz/static/js/main.a9fabfd8.chunk.js",
+  "main.js.map": "/ncovr-viz/static/js/main.a9fabfd8.chunk.js.map",
+  "static/js/1.f4e761c6.chunk.js": "/ncovr-viz/static/js/1.f4e761c6.chunk.js",
+  "static/js/1.f4e761c6.chunk.js.map": "/ncovr-viz/static/js/1.f4e761c6.chunk.js.map",
+  "static/css/2.04284bc4.chunk.css": "/ncovr-viz/static/css/2.04284bc4.chunk.css",
+  "static/js/2.e2834dc7.chunk.js": "/ncovr-viz/static/js/2.e2834dc7.chunk.js",
+  "static/js/2.e2834dc7.chunk.js.map": "/ncovr-viz/static/js/2.e2834dc7.chunk.js.map",
+  "runtime~main.js": "/ncovr-viz/static/js/runtime~main.edd360bb.js",
+  "runtime~main.js.map": "/ncovr-viz/static/js/runtime~main.edd360bb.js.map",
+  "static/media/NAT_counties.csv": "/ncovr-viz/static/media/NAT_counties.c46752c1.csv",
+  "static/media/NAT_states.csv": "/ncovr-viz/static/media/NAT_states.e22e9ae7.csv",
+  "static/media/NAT.geojson": "/ncovr-viz/static/media/NAT.6db895be.geojson",
+  "static/media/US_states.geojson": "/ncovr-viz/static/media/US_states.2aa3311d.geojson",
+  "static/css/main.037d223d.chunk.css.map": "/ncovr-viz/static/css/main.037d223d.chunk.css.map",
+  "static/css/2.04284bc4.chunk.css.map": "/ncovr-viz/static/css/2.04284bc4.chunk.css.map",
+  "index.html": "/ncovr-viz/index.html",
+  "precache-manifest.01f9adcd464a644d65d2b91934d999d6.js": "/ncovr-viz/precache-manifest.01f9adcd464a644d65d2b91934d999d6.js",
+  "service-worker.js": "/ncovr-viz/service-worker.js"
+}
