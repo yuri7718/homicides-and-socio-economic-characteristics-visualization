@@ -10,6 +10,7 @@ class Heatmap extends React.Component {
 
         // map data
         this.yearRange = [];
+        this.stateGeojson = [];
         this.countyGeojson = [];
 
         // map id
@@ -17,8 +18,10 @@ class Heatmap extends React.Component {
         this.COUNTY_MAP_ID = 'h-county';
 
         // number of colors for the color scale
-        this.STATE_COLORS = 11;
-        this.COUNTY_COLORS = 11;
+        this.STATE_COLORS = 7;
+        this.COUNTY_COLORS = 7;
+
+        this.featureList = {};
 
         this.features = this.props.featureList;
         this.marks = this.props.timeline.reduce((marksDict, year) => {
@@ -32,6 +35,7 @@ class Heatmap extends React.Component {
 
     drawHeatMap() {
         console.log('test de Nat_bis = \n ', this.countyGeojson)
+        
         const { scrollWidth, scrollHeight } = this.canvasRef.current;
         const margins = { top: 30, right: 30, bottom: 30, left: 30 };
         const width = scrollWidth - margins.left - margins.right;
@@ -60,24 +64,7 @@ class Heatmap extends React.Component {
             .append('g')
             .attr('transform', `translate(${margins.left}, ${margins.top})`)
         
-        const barWidth = width / (this.marks[90] - this.marks[60]),
-            barHeight = height / 10;
         
-        const featureExtrema = getExtrema(this.props.currentFeature, this.props.years, this.countyGeojson);
-        const stateColorScale = getColorScale(featureExtrema, this.STATE_COLORS);
-        const countyColorScale = getColorScale(featureExtrema, this.COUNTY_COLORS);
-        
-        this.drawCounties(svg, countyColorScale);
-
-
-
-
-
-
-
-
-
-
 
         ////////////////////////////////////////////////
 
@@ -93,27 +80,7 @@ class Heatmap extends React.Component {
             
     }
 
-    drawMap() {
-        console.log('ma version', React.version);
 
-        let size = 500;
-        let svg = d3.select(this.myRef.current)
-            .append('svg')
-            .attr('width', size)
-            .attr('height', size);
-
-        let rect_width = 95;
-        svg.selectAll('rect')
-            .data(this.dataset)
-            .enter()
-            .append('rect')
-            .attr('x', (d, i) => 5 + i * (rect_width + 5))
-            .attr('y', d => size - d)
-            .attr('width', rect_width)
-            .attr('height', d => d)
-            .attr('fill', 'teal');
-
-    }
  
 
     drawCounties(svg, colorScale) {
@@ -130,18 +97,25 @@ class Heatmap extends React.Component {
     }
 
     componentDidMount() {
-
+/*
         Promise.all([d3.csv(natCountiesB)]).then(data => {
-            this.countyGeojson = data;
-           
+            this.countyGeojson = data;           
             // this.setState({ countyDataset: data[0], stateDataset: data[1] });
         });
-      
-        this.drawHeatMap();               
+        */
+        
+        this.props.featureList.forEach(element => {
+            this.featureList[element.key] = element.feature;
+            console.log(" ----> this.featureList[element.key] = \n", this.featureList[element.key])
+        });
 
+        Promise.all([d3.json(this.props.stateGeojson), d3.json(this.props.countyGeojson)]).then(data => {
+            this.stateGeojson = data[0].features;
+            this.countyGeojson = data[1].features;
+            // console.log(" ----> this.countyGeojson = \n", this.countyGeojson)
+            this.drawHeatMap();
+        }).catch(err => console.log("error", err));                      
     }
-
-
 
     render() {
         return (

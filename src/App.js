@@ -16,7 +16,7 @@ import Heatmap from './map/Heatmap';
 class App extends React.Component {
   constructor(props) {
     super(props);
-    
+
     this.state = {
       countyDataset: [],
       stateDataset: [],
@@ -27,16 +27,16 @@ class App extends React.Component {
     };
 
     this.features = [
-      {key: 'HR', feature: 'Homicide rate'},
-      {key: 'UE', feature: 'Unemployment rate'},
-      {key: 'DV', feature: 'Divorce rate'},
-      {key: 'MA', feature: 'Median age'},
-      {key: 'DNL', feature: 'Population density'},
-      {key: 'MFIL', feature: 'Median family income'},
-      {key: 'FP', feature: 'Percentage of families below poverty'},
-      {key: 'BLK', feature: 'Percentage of black population'},
-      {key: 'GI', feature: 'Gini index'},
-      {key: 'FH', feature: 'Percentage of female headed households'}
+      { key: 'HR', feature: 'Homicide rate' },
+      { key: 'UE', feature: 'Unemployment rate' },
+      { key: 'DV', feature: 'Divorce rate' },
+      { key: 'MA', feature: 'Median age' },
+      { key: 'DNL', feature: 'Population density' },
+      { key: 'MFIL', feature: 'Median family income' },
+      { key: 'FP', feature: 'Percentage of families below poverty' },
+      { key: 'BLK', feature: 'Percentage of black population' },
+      { key: 'GI', feature: 'Gini index' },
+      { key: 'FH', feature: 'Percentage of female headed households' }
     ];
     this.years = [60, 70, 80, 90];
 
@@ -49,15 +49,15 @@ class App extends React.Component {
 
   selectFeature(e) {
     e.preventDefault();
-    this.setState({feature: e.currentTarget.accessKey});
+    this.setState({ feature: e.currentTarget.accessKey });
   }
 
   selectTime = (year) => {
-    this.setState({year: year});
+    this.setState({ year: year });
   };
 
   selectRegion(state, county) {
-    this.setState({state: state, county: county})
+    this.setState({ state: state, county: county })
   }
 
   componentDidMount() {
@@ -65,7 +65,7 @@ class App extends React.Component {
 
   fetchData() {
     Promise.all([d3.csv(natCounties), d3.csv(natStates)]).then(data => {
-      this.setState({countyDataset: data[0], stateDataset: data[1]});
+      this.setState({ countyDataset: data[0], stateDataset: data[1] });
     });
   }
 
@@ -97,12 +97,12 @@ class App extends React.Component {
           </a>
         </header>
       </div>*/
-      
+
       <div className="App">
         <Layout className="layout">
           <Row gutter={[16, 16]}>
             <Col span={4} >
-              <Card style={{height: firstRowHeight}}>
+              <Card style={{ height: firstRowHeight }}>
                 <Feature
                   featureList={this.features}
                   currentFeature={this.state.feature}
@@ -110,8 +110,8 @@ class App extends React.Component {
                 />
               </Card>
             </Col>
-            <Col span={10} >
-              <Card style={{height: firstRowHeight}}>
+            <Col span={14} >
+              <Card style={{ height: firstRowHeight }}>
                 <Time
                   timeline={this.years}
                   onSelectTime={this.selectTime}
@@ -129,11 +129,9 @@ class App extends React.Component {
                 />
               </Card>
             </Col>
-            <Col span={10} >
+            <Col span={6} >
               <Card style={{ height: firstRowHeight }}>
                 <Heatmap
-                  timeline={this.years}
-                  featureList={this.features}
                   stateGeojson={statesGeojson}
                   stateDataset={this.state.stateDataset}
                   countyGeojson={natGeojson}
@@ -141,11 +139,14 @@ class App extends React.Component {
                   currentYear={this.state.year}
                   years={this.years}
                   onSelectRegion={this.selectRegion}
+                  tooltip={this.tooltip}
+                  featureList={this.features}
+                  timeline={this.years}
                 />
               </Card>
             </Col>
             <Col span={16} >
-              <Card style={{height: secondRowHeight}}>
+              <Card style={{ height: secondRowHeight }}>
                 <ParallelCoordinates
                   featureList={this.features}
                   stateCSV={this.state.stateDataset}
@@ -156,7 +157,7 @@ class App extends React.Component {
               </Card>
             </Col>
             <Col span={8} >
-              <Card style={{height: secondRowHeight}}>adfdf</Card>
+              <Card style={{ height: secondRowHeight }}>adfdf</Card>
             </Col>
           </Row>
         </Layout>
