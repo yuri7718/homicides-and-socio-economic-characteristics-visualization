@@ -1,78 +1,114 @@
 import React from 'react';
 import * as d3 from 'd3';
 import { Spin } from 'antd';
-import { getStateData, getScales } from './helper';
+import { getStateData, getYScales } from './helper';
 
 class ParallelCoordinates extends React.Component {
   constructor(props) {
     super(props);
 
     this.canvasRef = React.createRef();
+
+    this.title = '';
   }
 
+
+
   drawParallelCoordinates(data) {
+
     const {scrollWidth, scrollHeight} = this.canvasRef.current;
-    const margin = {top: 30, right: 30, bottom: 30, left: 30};
+    const margin = {top: 50, right: 50, bottom: 50, left: 50};
     const width = scrollWidth - margin.left - margin.right;
     const height = scrollHeight - margin.top - margin.bottom;
 
-
-    const svg = d3.select('#parallel-coordinates')
-      .attr('width', scrollWidth)
-      .attr('height', scrollHeight)
-      .append('g')
-      .attr('transform', `translate(${margin.left}, ${margin.top})`)
-
-    const featureNames = Object.keys(data[0]).filter(key => key.slice(-2) == this.props.currentYear);
-    const yScales = getScales(this.props.stateCSV, this.props.currentYear, height);
-    const xScale = d3.scalePoint()
-      .range([0, width])
-      .domain(featureNames);
-
-    function path(d) {
-      return d3.line()(featureNames.map(function(p) { return [xScale(p), yScales[p](d[p])]; }));
+    if (this.props.currentState !== '') {
+      data = data.filter(d => d.STATE_NAME === this.props.currentState);
     }
 
-    svg.selectAll('myPath')
+    const svg = d3.select(this.canvasRef.current).select('svg')
+      .attr('width', width)
+      .attr('height', height)
+
+    const rootGroup = svg.select('g#root');
+
+    rootGroup.append('g')
+      .attr('transform', `translate(${margin.left}, ${margin.top})`)
+
+    let features = this.props.featureList.map(feature => feature.key + this.props.currentYear);
+
+    const yScales = getYScales(data, features, margin.top + height, margin.top);
+    const xScale = d3.scalePoint()
+      .range([margin.left, width])
+      .domain(features);
+
+    const path = d => {
+      return d3.line()(features.map(feature => {
+        const yScale = yScales[feature];
+        return [xScale(feature), yScale(d[feature])];
+      }));
+    }
+
+    rootGroup.selectAll('path')
       .data(data)
       .join('path')
       .attr('d', path)
       .style('fill', 'none')
-      .style('stroke', '#000')
+      .style('stroke', '#69b3a2')
     
-    svg.selectAll("myAxis")
-      .data(featureNames).enter()
+    rootGroup.selectAll("myAxis")
+      .data(features).enter()
       .append("g")
-      .attr("class", "axis")
-      .attr("transform", function(d) { return `translate(${xScale(d)})`})
+      .attr('id', 'axis-test')
+      .attr('transform', d => `translate(${xScale(d)})`)
       .each(function(d) { d3.select(this).call(d3.axisLeft().ticks(5).scale(yScales[d])); })
       .append("text")
       .style("text-anchor", "middle")
-      .attr("y", -9)
-      .text(function(d) { return d; })
+      .attr("y", 10)
+      .text(function(d) { 
+        return d; })
       .style("fill", "black")
+      .attr('id', 'label-test')
+      
   
   }
 
   componentDidMount() {
-    //this.drawParallelCoordinates(this.props.stateCSV);
-    
+
   }
 
-  componentDidUpdate() { 
-    console.log("parallel",this.props.currentYear);
-    //this.drawParallelCoordinates(this.props.stateCSV)
+  componentDidUpdate(prevProps, prevState) { 
+    if (prevProps.currentState !== this.props.currentState) {
+      console.log(this.props.currentState)
+    }
+  }
+
+  clearChart() {
+    d3.select(this.canvasRef.current).select('g#root').selectAll('*').remove();
   }
 
 
   render() {
-    if (this.props.stateCSV.length > 0) {
-      this.drawParallelCoordinates(this.props.stateCSV);
-      console.log("called");
+  
+    if (this.props.stateCSV.length > 0 && this.props.countyCSV.length > 0) {
+      if (this.props.currentState === '') {
+        this.clearChart();
+        this.drawParallelCoordinates(this.props.stateCSV);
+      } else {
+        this.clearChart();
+        this.drawParallelCoordinates(this.props.countyCSV);
+      }
     }
+    const text = this.props.currentState === '' ?
+      ('US states socio-economic characteristics in 19' +  this.props.currentYear) :
+      this.props.currentState + ' socio-economic characteristics in 19' + this.props.currentYear;
     return (
-      <div style={{height: '100%'}} ref={this.canvasRef}>
-        <svg id='parallel-coordinates' style={{width: '100%', height: '100%'}}></svg>
+      <div style={{height: '100%'}}>
+        <div style={{padding: '10px 10px', textAlign: 'center'}}>{text}</div>
+        <div style={{height: '100%'}} ref={this.canvasRef}>
+          <svg style={{width: '100%', height: '100%'}}>
+            <g id='root'></g>
+          </svg>
+        </div>
       </div>
     )
   }
