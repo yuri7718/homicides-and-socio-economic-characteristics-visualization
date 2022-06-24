@@ -11,6 +11,7 @@ import natGeojson from './assets/NAT.geojson';
 import statesGeojson from './assets/US_states.geojson';
 import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
 import { createTooltip } from './tooltip';
+import Heatmap from './map/Heatmap';
 
 class App extends React.Component {
   constructor(props) {
