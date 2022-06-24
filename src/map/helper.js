@@ -39,13 +39,21 @@ export function getExtrema(feature, years, dataGeojson) {
 
 
 export function showMap(mapID) {
-  d3.select(mapID)
+  d3.selectAll(mapID)
     .style('visibility', 'visible');
 }
 
 export function hideMap(mapID) {
-  d3.select(mapID)
+  d3.selectAll(mapID)
     .style('visibility', 'hidden');
+}
+
+export function hideStateLegend(stateLegend) {
+  stateLegend.style('visibility', 'hidden');
+}
+
+export function showStateLegend(stateLegend) {
+  stateLegend.style('visibility', 'visible');
 }
 
 export function getTooltipText(region, feature, value, year) {

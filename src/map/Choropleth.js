@@ -1,7 +1,10 @@
 import React from 'react';
 import * as d3 from 'd3';
-import { getColorScale, getExtrema, showMap, hideMap, getTooltipText } from './helper';
-import { Segmented } from 'antd';
+import { getColorScale, getExtrema, showMap, hideMap, getTooltipText, showStateLegend, hideStateLegend } from './helper';
+import { Segmented, Row, Col, Button } from 'antd';
+import d3legend from 'd3-svg-legend';
+import { toHaveDescription } from '@testing-library/jest-dom/dist/matchers';
+import { color } from 'd3';
 
 class Choropleth extends React.Component {
   constructor(props) {
@@ -28,21 +31,40 @@ class Choropleth extends React.Component {
 
     // number of colors for the color scale
     this.STATE_COLORS = 7;
-    this.COUNTY_COLORS = 7;
+    this.COUNTY_COLORS = 3;
+
+    this.zoom = Object;
   }
 
   toggleMapType = (value) => {
     //event.preventDefault();
-    console.log(value)
+    //console.log(value)
     this.setState({map: value});
   }
+
+  increaseZoomScale = () => {
+    this.zoomTransition(d3.select('#map'), 1.2);  
+  }
+
+  decreaseZoomScale = () => {
+    this.zoomTransition(d3.select('#map'), 0.8);
+  }
+
+  zoomTransition(svg, zoomLevel) {
+    svg.transition()
+      .delay(100)
+      .duration(700)
+      .call(this.zoom.scaleBy, zoomLevel);
+  }
+
+
 
   drawMap() {
     const {scrollWidth, scrollHeight} = this.canvasRef.current;
 
     const projection = d3.geoAlbersUsa()
       .scale(scrollWidth / 1.2)
-      .translate([scrollWidth / 2 , scrollHeight / 2]);
+      .translate([scrollWidth / 2, scrollHeight / 2]);
     
     const path = d3.geoPath()
       .projection(projection);
@@ -53,11 +75,13 @@ class Choropleth extends React.Component {
 
     d3.selectAll('#' + this.STATE_MAP_ID).remove();
     d3.selectAll('#' + this.COUNTY_MAP_ID).remove();
-    const svg = d3.select(this.canvasRef.current).select('svg');
+    const svg = d3.select(this.canvasRef.current).select('#map');
 
     this.drawStates(svg, stateColorScale, path);
     this.drawCounties(svg, countyColorScale, path);
-    
+    this.drawStateLegend(stateColorScale);
+    this.drawCountyLegend(countyColorScale);
+    console.log('show states', this.state.showState);
     if (this.state.showState) {
       hideMap('#' + this.COUNTY_MAP_ID);
     }
@@ -65,22 +89,36 @@ class Choropleth extends React.Component {
     // zoom function
     const zoomed = event => {
       const {transform} = event;
-      d3.selectAll('#' + this.STATE_MAP_ID).attr('transform', transform);
-      d3.selectAll('#' + this.COUNTY_MAP_ID).attr('transform', transform);
-      d3.selectAll('#' + this.STATE_MAP_ID).attr('stroke-width', 1 / transform.k);
-      d3.selectAll('#' + this.COUNTY_MAP_ID).attr('stroke-width', 1 / transform.k);
+      d3.select('#map').selectAll('g').attr('transform', transform);
+      d3.select('#map').selectAll('g').attr('stroke-width', 1 / transform.k);
       this.setState({x: transform.x, y: transform.y, zoomScale: transform.k}, this.updateZoomedView(this.state.zoomScale));
     };
 
-    const zoom = d3.zoom()
+    this.zoom = d3.zoom()
       .scaleExtent([1, 4])
       .on("zoom", zoomed);
     
-    svg.call(zoom)
+    svg.call(this.zoom)
       .transition()
-      .call(zoom.transform, d3.zoomIdentity.translate(this.state.x,this.state.y).scale(this.state.zoomScale));
+      .call(this.zoom.transform, d3.zoomIdentity.translate(this.state.x,this.state.y).scale(this.state.zoomScale));
 
 
+  }
+
+  drawStateLegend(colorScale) {
+    const legend = d3legend.legendColor()
+      .shapeWidth(30)
+      .orient('vertical')
+      .scale(colorScale);
+    d3.select('#legend').append('g').attr('id', this.STATE_MAP_ID).call(legend);
+  }
+
+  drawCountyLegend(colorScale) {
+    const legend = d3legend.legendColor()
+      .shapeWidth(30)
+      .orient('vertical')
+      .scale(colorScale);
+    d3.select('#legend').append('g').attr('id', this.COUNTY_MAP_ID).call(legend);
   }
 
   drawStates(svg, colorScale, path) {
@@ -92,27 +130,14 @@ class Choropleth extends React.Component {
       .enter()
       .append('path')
       .attr('d', path)
-      .attr('fill', d => {
-        // stateGeojson is not from the original datasets and only contains the polygons
-        // we need to match it with the original dataset that contains the features
-        const feature = this.props.stateDataset.find(state => state.STATE_NAME === d.properties.STATE_NAME);
-        if (typeof feature !== 'undefined') {
-          return colorScale(feature[this.state.property]);
-        }
-      })
+      .attr('fill', d => colorScale(d.properties[this.state.property]))
       .style('stroke', '#000')
       .on('click', (event, d) => this.props.onSelectRegion(d.properties.STATE_NAME, ''))
-      
       .on('mouseover', (event, d) => {
-        const feature = this.props.stateDataset.find(state => state.STATE_NAME === d.properties.STATE_NAME);
-        let value = 0;
-        if (typeof feature !== 'undefined') {
-          value = feature[this.state.property];
-        }
         this.props.tooltip
           .style('visibility', 'visible');
         this.props.tooltip.html(getTooltipText(d.properties.STATE_NAME,
-            this.props.currentFeature, value,
+            this.props.currentFeature, d.properties[this.state.property],
             this.props.currentYear))
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY + 10) + 'px');
@@ -146,6 +171,8 @@ class Choropleth extends React.Component {
       .on('mouseout', (event, d) => {
         this.props.tooltip.style('visibility', 'hidden')
       });
+
+   
   }
 
   /**
@@ -156,9 +183,16 @@ class Choropleth extends React.Component {
   updateZoomedView(zoomScale) {
     if (zoomScale > this.ZOOM_SCALE_THRESHOLD && this.state.showState === true) {
       // change to county view
-      this.setState({showState: false}, () => showMap('#' + this.COUNTY_MAP_ID));
+      this.setState({showState: false}, () => {
+        showMap('#' + this.COUNTY_MAP_ID);
+        hideStateLegend(d3.select('#legend').select('#' + this.STATE_MAP_ID));
+      });
     } else if (zoomScale <= this.ZOOM_SCALE_THRESHOLD && this.state.showState === false) {
-      this.setState({showState: true}, () => hideMap('#' + this.COUNTY_MAP_ID));
+      // change to state view
+      this.setState({showState: true}, () => {
+        hideMap('#' + this.COUNTY_MAP_ID);
+        showStateLegend(d3.select('#legend').select('#' + this.STATE_MAP_ID))
+      });
     }
   }
 
@@ -183,11 +217,24 @@ class Choropleth extends React.Component {
 
   render() {
     return (
-      <div style={{height: '100%'}} ref={this.canvasRef}>
-        <Segmented options={['CHOROPLETH', 'HEXBIN']} value={this.state.map} onChange={this.toggleMapType} />
-        <svg id="map" style={{width: '100%', height: '100%'}}>
-          <g id='root'></g>
-        </svg>
+      <div style={{height: '100%'}}>
+        <Row gutter={[16, 16]} style={{height: '100%'}}>
+          <Col span={4}>
+            <Segmented options={['CHOROPLETH', 'HEXBIN']} value={this.state.map} onChange={this.toggleMapType} />
+            <div>
+              <svg id='legend'><g></g></svg>
+            </div>
+            <div>
+              <Button onClick={this.increaseZoomScale}>+</Button>
+              <Button onClick={this.decreaseZoomScale}>-</Button>
+            </div>
+          </Col>
+          <Col span={20}>
+          <div style={{height: '100%', width: '100%'}} ref={this.canvasRef}>
+            <svg id='map' style={{width: '100%', height: '100%'}}><g id='root'></g></svg>
+          </div>
+          </Col>
+        </Row>
       </div>
     );
   }
