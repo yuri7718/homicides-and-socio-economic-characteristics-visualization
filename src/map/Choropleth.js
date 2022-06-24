@@ -82,6 +82,7 @@ class Choropleth extends React.Component {
 
     d3.selectAll('#' + this.STATE_MAP_ID).remove();
     d3.selectAll('#' + this.COUNTY_MAP_ID).remove();
+
     const svg = d3.select(this.canvasRef.current).select('#map');
 
     this.drawStates(svg, stateColorScale, path);
@@ -90,7 +91,12 @@ class Choropleth extends React.Component {
     this.drawCountyLegend(countyColorScale);
     
     if (this.state.showState) {
+      // hide county
       hideMap('#' + this.COUNTY_MAP_ID);
+    
+    } else {
+      // hide state
+      hideStateLegend(d3.select('#legend').select('#' + this.STATE_MAP_ID))
     }
 
     // zoom function
@@ -198,6 +204,7 @@ class Choropleth extends React.Component {
       this.setState({showState: false}, () => {
         showMap('#' + this.COUNTY_MAP_ID);
         hideStateLegend(d3.select('#legend').select('#' + this.STATE_MAP_ID));
+
       });
     } else if (zoomScale <= this.ZOOM_SCALE_THRESHOLD && this.state.showState === false) {
       // change to state view
@@ -236,6 +243,7 @@ class Choropleth extends React.Component {
     const property = this.props.currentFeature + this.props.currentYear;
     if (prevState.property !== property) {
       this.setState({property: property});
+      //d3.select('svg#legend').selectAll('*').remove();
       this.drawMap();
     }
   }

@@ -150,7 +150,7 @@ class App extends React.Component {
                   stateCSV={this.state.stateDataset}
                   countyCSV={this.state.countyDataset}
                   currentState={this.state.state}
-                  currentCounty={this.state.county}
+                  //currentCounty={this.state.county}
                   currentFeature={this.state.feature}
                   currentYear={this.state.year}
                 />
