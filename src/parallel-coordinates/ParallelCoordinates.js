@@ -44,7 +44,7 @@ class ParallelCoordinates extends React.Component {
     const path = d => {
       return d3.line()(features.map(feature => {
         const yScale = yScales[feature];
-        return [xScale(feature), yScale(d[feature])];
+        return [xScale(feature), yScale(Number(d[feature]))];
       }));
     }
 
@@ -78,7 +78,7 @@ class ParallelCoordinates extends React.Component {
 
   componentDidUpdate(prevProps, prevState) { 
     if (prevProps.currentState !== this.props.currentState) {
-      console.log(this.props.currentState)
+      //console.log(this.props.currentState)
     }
   }
 
