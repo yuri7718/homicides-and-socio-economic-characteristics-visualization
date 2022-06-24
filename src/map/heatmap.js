@@ -1,148 +1,155 @@
 import React from 'react';
 import * as d3 from 'd3';
-// import { color, svg } from 'd3';
-// import { toHaveDisplayValue } from '@testing-library/jest-dom/dist/matchers';
-// import { event as currentEvent } from 'd3';
+import { getColorScale, getExtrema, showMap, hideMap } from './helper';
+import natCountiesB from '../assets/NAT_bis.csv';
 
-class Choropleth extends React.Component {
+class Heatmap extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {
-            property: this.props.currentFeature + this.props.currentYear,
-            showState: true,
-            x: 0,
-            y: 0,
-            zoomScale: 1
-        }
+        this.canvasRef = React.createRef(); 
 
-        this.canvasRef = React.createRef();
-        this.ZOOM_SCALE_THRESHOLD = 4;
-
-        this.stateGeojson = [];
+        // map data
+        this.yearRange = [];
         this.countyGeojson = [];
+
+        // map id
+        this.STATE_MAP_ID = 'h-state';
+        this.COUNTY_MAP_ID = 'h-county';
+
+        // number of colors for the color scale
+        this.STATE_COLORS = 11;
+        this.COUNTY_COLORS = 11;
+
+        this.features = this.props.featureList;
+        this.marks = this.props.timeline.reduce((marksDict, year) => {
+            marksDict[year] = '19' + year;
+            return marksDict;
+        }, {});
+    }
+
+
+
+
+    drawHeatMap() {
+        console.log('test de Nat_bis = \n ', this.countyGeojson)
+        const { scrollWidth, scrollHeight } = this.canvasRef.current;
+        const margins = { top: 30, right: 30, bottom: 30, left: 30 };
+        const width = scrollWidth - margins.left - margins.right;
+        const height = scrollHeight - margins.top - margins.bottom;
+
+
+        const featureNames = this.features.map(d => {
+            return d.feature + ' (' + d.key + ')';
+        });
+
+        // console.log(" ----> featureNames = \n", featureNames)
+        const yScale = d3.scalePoint()
+            .domain(featureNames.sort())
+            .range([height, 0])
+        
+        const xScale = d3.scaleLinear()
+            .domain([this.marks[60], this.marks[90]])
+            .range([0, width])
+            
+
+
+        //Setting chart width and adjusting for margins
+        const svg = d3.select('#heat-map')
+            .attr('width', scrollWidth)
+            .attr('height', scrollHeight)
+            .append('g')
+            .attr('transform', `translate(${margins.left}, ${margins.top})`)
+        
+        const barWidth = width / (this.marks[90] - this.marks[60]),
+            barHeight = height / 10;
+        
+        const featureExtrema = getExtrema(this.props.currentFeature, this.props.years, this.countyGeojson);
+        const stateColorScale = getColorScale(featureExtrema, this.STATE_COLORS);
+        const countyColorScale = getColorScale(featureExtrema, this.COUNTY_COLORS);
+        
+        this.drawCounties(svg, countyColorScale);
+
+
+
+
+
+
+
+
+
+
+
+        ////////////////////////////////////////////////
+
+        //Append x axis
+        svg.append('g')
+            .call(d3.axisBottom(xScale).ticks(4))
+            .attr('transform', `translate(0, ${height})`) 
+
+        //Append y axis
+        svg.append('g')
+            .call(d3.axisRight(yScale))
+            .attr('transform', `translate(${width}, 0)`)
+            
     }
 
     drawMap() {
-        const { scrollWidth, scrollHeight } = this.canvasRef.current;
+        console.log('ma version', React.version);
 
-        const projection = d3.geoAlbersUsa()
-            .scale(scrollWidth / 1.2)
-            .translate([scrollWidth / 2, scrollHeight / 2]);
+        let size = 500;
+        let svg = d3.select(this.myRef.current)
+            .append('svg')
+            .attr('width', size)
+            .attr('height', size);
 
-        const path = d3.geoPath()
-            .projection(projection);
-
-        const colorScale = this.getColorScale();
-        const property = this.props.currentFeature + this.props.currentYear;
-
-        d3.selectAll('g').remove();
-
-        // draw map
-        if (this.state.showState) {
-            d3.select('svg')
-                .append('g')
-                .selectAll('path')
-                .data(this.stateGeojson)
-                .enter()
-                .append('path')
-                .attr('fill', d => {
-                    const filteredFeature = this.props.stateDataset.filter(x => x.STATE_NAME === d.properties.STATE_NAME);
-                    if (filteredFeature.length > 0) {
-                        return colorScale(filteredFeature[0][property]);
-                    }
-                })
-                .attr('d', path)
-                .style("stroke", "#000000")
-                //.style('fill', 'none')
-                .on('click', (e, d) => this.props.onSelectRegion(d.properties.STATE_NAME, ''));
-        } else {
-            d3.select('svg')
-                .append('g')
-                .selectAll('path')
-                .data(this.countyGeojson)
-                .enter()
-                .append('path')
-                .attr('fill', d => colorScale(d.properties[property]))
-                .attr('d', path)
-                .style("stroke", "#000000")
-                .on('click', (e, d) => this.props.onSelectRegion(d.properties.STATE_NAME, d.properties.NAME));
-        }
-
-        // zoom function
-        const zoomed = event => {
-            const { transform } = event;
-            d3.selectAll('g').attr("transform", transform);
-            d3.selectAll('g').attr("stroke-width", 1 / transform.k);
-            this.updateZoomedView(transform);
-            this.setState({ x: transform.x, y: transform.y, zoomScale: transform.k })
-        };
-
-
-        const zoom = d3.zoom()
-            .scaleExtent([1, 8])
-            .on("zoom", zoomed);
-
-
-        d3.select('svg')
-            .call(zoom)
-            .transition()
-            .call(zoom.transform, d3.zoomIdentity.translate(this.state.x, this.state.y).scale(this.state.zoomScale));
+        let rect_width = 95;
+        svg.selectAll('rect')
+            .data(this.dataset)
+            .enter()
+            .append('rect')
+            .attr('x', (d, i) => 5 + i * (rect_width + 5))
+            .attr('y', d => size - d)
+            .attr('width', rect_width)
+            .attr('height', d => d)
+            .attr('fill', 'teal');
 
     }
+ 
 
-    /**
-     * Return color scale based on state/county, selected feature, and selected year
-     */
-    getColorScale() {
-        const property = this.props.currentFeature + this.props.currentYear;
-        const features = this.state.showState ?
-            this.props.stateDataset.map(d => d[property]) : this.countyGeojson.map(d => d.properties[property]);
-
-        const colorScale = d3.scaleQuantize()
-            .domain(d3.extent(features))
-            .range(d3.schemeBlues[9]);
-
-        return colorScale;
-    }
-
-    updateZoomedView(transform) {
-
-        if (transform.k > this.ZOOM_SCALE_THRESHOLD && this.state.showState === true) {
-            // change to county view
-            this.setState({ showState: false }, () => this.drawMap());
-        } else if (transform.k <= this.ZOOM_SCALE_THRESHOLD && this.state.showState === false) {
-            this.setState({ showState: true }, () => this.drawMap());
-        }
+    drawCounties(svg, colorScale) {
+        // console.log(" ----> colorScale = ", colorScale)
+        
+        svg.append('g')
+            .attr('id', this.COUNTY_MAP_ID)
+            .append('rect')
+            .data(this.countyGeojson)
+            .enter()
+            .attr('fill', d => colorScale(d.properties[this.state.property]))
+            .style('stroke', '#000')
+    
     }
 
     componentDidMount() {
 
-        Promise.all([d3.json(this.props.stateGeojson), d3.json(this.props.countyGeojson)]).then(data => {
-            this.stateGeojson = data[0].features;
-            this.countyGeojson = data[1].features;
-
-            this.drawMap();
-        })
-            .catch((err) => console.log("err", err));
+        Promise.all([d3.csv(natCountiesB)]).then(data => {
+            this.countyGeojson = data;
+           
+            // this.setState({ countyDataset: data[0], stateDataset: data[1] });
+        });
+      
+        this.drawHeatMap();               
 
     }
 
-    componentDidUpdate(prevProps, prevState) {
 
-        const property = this.props.currentFeature + this.props.currentYear
-        if (prevState.property !== property) {
-            this.setState({ property: property });
-            this.drawMap()
-        }
-    }
 
     render() {
         return (
             <div style={{ height: '100%' }} ref={this.canvasRef}>
-                <svg style={{ width: '100%', height: '100%' }}></svg>
+                <svg id='heat-map' style={{ width: '100%', height: '100%' }}></svg>
             </div>
         );
     }
 }
 
-export default Choropleth;
+export default Heatmap;

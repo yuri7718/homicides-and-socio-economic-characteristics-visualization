@@ -10,6 +10,7 @@ import Choropleth from './map/Choropleth';
 import natGeojson from './assets/NAT.geojson';
 import statesGeojson from './assets/US_states.geojson';
 import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
+import Heatmap from './map/Heatmap';
 
 class App extends React.Component {
   constructor(props) {
@@ -66,7 +67,7 @@ class App extends React.Component {
   }
 
   componentDidUpdate() {
-    console.log(this.state)
+    // console.log(this.state)
   }
 
   render() {
@@ -106,7 +107,7 @@ class App extends React.Component {
                 />
               </Card>
             </Col>
-            <Col span={14} >
+            <Col span={10} >
               <Card style={{height: firstRowHeight}}>
                 <Time
                   timeline={this.years}
@@ -123,8 +124,20 @@ class App extends React.Component {
                 />
               </Card>
             </Col>
-            <Col span={6} >
-              <Card style={{height: firstRowHeight}}></Card>
+            <Col span={10} >
+              <Card style={{ height: firstRowHeight }}>
+                <Heatmap
+                  timeline={this.years}
+                  featureList={this.features}
+                  stateGeojson={statesGeojson}
+                  stateDataset={this.state.stateDataset}
+                  countyGeojson={natGeojson}
+                  currentFeature={this.state.feature}
+                  currentYear={this.state.year}
+                  years={this.years}
+                  onSelectRegion={this.selectRegion}
+                />
+              </Card>
             </Col>
             <Col span={16} >
               <Card style={{height: secondRowHeight}}>
