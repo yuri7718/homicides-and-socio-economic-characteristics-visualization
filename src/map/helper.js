@@ -57,11 +57,12 @@ export function showStateLegend(stateLegend) {
 }
 
 export function getTooltipText(region, feature, value, year) {
+  const roundedValue = value.toFixed(2);
   const html =
   `<div>
-    <p>${region}</p>
-    <p><b>${feature}: </b>${value}<p>
-    <p><b>Year: </b>${year}</p>
+    <p><b>${region}<b></p>
+    <p><b>${feature}: </b>${roundedValue}<p>
+    <p><b>Year: </b>19${year}</p>
   </div>`
   return html;
 }

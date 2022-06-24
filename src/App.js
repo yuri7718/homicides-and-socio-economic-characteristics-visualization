@@ -124,6 +124,7 @@ class App extends React.Component {
                   years={this.years}
                   onSelectRegion={this.selectRegion}
                   tooltip={this.tooltip}
+                  featureList={this.features}
                 />
               </Card>
             </Col>
@@ -136,6 +137,8 @@ class App extends React.Component {
                   featureList={this.features}
                   stateCSV={this.state.stateDataset}
                   currentYear={this.state.year}
+                  countyCSV={this.state.countyDataset}
+                  currentState={this.state.state}
                 />
               </Card>
             </Col>

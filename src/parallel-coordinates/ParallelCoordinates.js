@@ -8,7 +8,11 @@ class ParallelCoordinates extends React.Component {
     super(props);
 
     this.canvasRef = React.createRef();
+
+    this.title = '';
   }
+
+
 
   drawParallelCoordinates(data) {
 
@@ -17,6 +21,9 @@ class ParallelCoordinates extends React.Component {
     const width = scrollWidth - margin.left - margin.right;
     const height = scrollHeight - margin.top - margin.bottom;
 
+    if (this.props.currentState !== '') {
+      data = data.filter(d => d.STATE_NAME === this.props.currentState);
+    }
 
     const svg = d3.select(this.canvasRef.current).select('svg')
       .attr('width', width)
@@ -27,7 +34,7 @@ class ParallelCoordinates extends React.Component {
     rootGroup.append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
 
-    const features = Object.keys(data[0]).filter(key => key.slice(-2) == this.props.currentYear);
+    let features = this.props.featureList.map(feature => feature.key + this.props.currentYear);
 
     const yScales = getYScales(data, features, margin.top + height, margin.top);
     const xScale = d3.scalePoint()
@@ -47,8 +54,6 @@ class ParallelCoordinates extends React.Component {
       .attr('d', path)
       .style('fill', 'none')
       .style('stroke', '#69b3a2')
-      //.opacity(0.5);
-    
     
     rootGroup.selectAll("myAxis")
       .data(features).enter()
@@ -68,23 +73,42 @@ class ParallelCoordinates extends React.Component {
   }
 
   componentDidMount() {
-    
+
   }
 
-  componentDidUpdate() { 
-    
+  componentDidUpdate(prevProps, prevState) { 
+    if (prevProps.currentState !== this.props.currentState) {
+      console.log(this.props.currentState)
+    }
+  }
+
+  clearChart() {
+    d3.select(this.canvasRef.current).select('g#root').selectAll('*').remove();
   }
 
 
   render() {
-    if (this.props.stateCSV.length > 0) {
-      this.drawParallelCoordinates(this.props.stateCSV);
+  
+    if (this.props.stateCSV.length > 0 && this.props.countyCSV.length > 0) {
+      if (this.props.currentState === '') {
+        this.clearChart();
+        this.drawParallelCoordinates(this.props.stateCSV);
+      } else {
+        this.clearChart();
+        this.drawParallelCoordinates(this.props.countyCSV);
+      }
     }
+    const text = this.props.currentState === '' ?
+      ('US states socio-economic characteristics in 19' +  this.props.currentYear) :
+      this.props.currentState + ' socio-economic characteristics in 19' + this.props.currentYear;
     return (
-      <div style={{height: '100%'}} ref={this.canvasRef}>
-        <svg style={{width: '100%', height: '100%'}}>
-          <g id='root'></g>
-        </svg>
+      <div style={{height: '100%'}}>
+        <div style={{padding: '10px 10px', textAlign: 'center'}}>{text}</div>
+        <div style={{height: '100%'}} ref={this.canvasRef}>
+          <svg style={{width: '100%', height: '100%'}}>
+            <g id='root'></g>
+          </svg>
+        </div>
       </div>
     )
   }

@@ -3,8 +3,6 @@ import * as d3 from 'd3';
 import { getColorScale, getExtrema, showMap, hideMap, getTooltipText, showStateLegend, hideStateLegend } from './helper';
 import { Segmented, Row, Col, Button } from 'antd';
 import d3legend from 'd3-svg-legend';
-import { toHaveDescription } from '@testing-library/jest-dom/dist/matchers';
-import { color } from 'd3';
 
 class Choropleth extends React.Component {
   constructor(props) {
@@ -15,7 +13,8 @@ class Choropleth extends React.Component {
       x: 0,
       y: 0,
       zoomScale: 1,
-      map: 'CHOROPLETH'
+      map: 'CHOROPLETH',
+      region: ''
     }
 
     // geojson data
@@ -31,9 +30,11 @@ class Choropleth extends React.Component {
 
     // number of colors for the color scale
     this.STATE_COLORS = 7;
-    this.COUNTY_COLORS = 3;
+    this.COUNTY_COLORS = 7;
 
     this.zoom = Object;
+
+    this.featureList = {};
   }
 
   toggleMapType = (value) => {
@@ -48,6 +49,10 @@ class Choropleth extends React.Component {
 
   decreaseZoomScale = () => {
     this.zoomTransition(d3.select('#map'), 0.8);
+  }
+
+  resetSelectedRegion = () => {
+    this.setState({region: ''}, () => {this.props.onSelectRegion('', '');})
   }
 
   zoomTransition(svg, zoomLevel) {
@@ -69,9 +74,11 @@ class Choropleth extends React.Component {
     const path = d3.geoPath()
       .projection(projection);
 
-    const featureExtrema = getExtrema(this.props.currentFeature, this.props.years, this.countyGeojson);
-    const stateColorScale = getColorScale(featureExtrema, this.STATE_COLORS);
-    const countyColorScale = getColorScale(featureExtrema, this.COUNTY_COLORS);
+    const countyExtrema = getExtrema(this.props.currentFeature, this.props.years, this.countyGeojson);
+    const stateExtrema = getExtrema(this.props.currentFeature, this.props.years, this.stateGeojson);
+    
+    const stateColorScale = getColorScale(stateExtrema, this.STATE_COLORS);
+    const countyColorScale = getColorScale(countyExtrema, this.COUNTY_COLORS);
 
     d3.selectAll('#' + this.STATE_MAP_ID).remove();
     d3.selectAll('#' + this.COUNTY_MAP_ID).remove();
@@ -81,7 +88,7 @@ class Choropleth extends React.Component {
     this.drawCounties(svg, countyColorScale, path);
     this.drawStateLegend(stateColorScale);
     this.drawCountyLegend(countyColorScale);
-    console.log('show states', this.state.showState);
+    
     if (this.state.showState) {
       hideMap('#' + this.COUNTY_MAP_ID);
     }
@@ -101,7 +108,6 @@ class Choropleth extends React.Component {
     svg.call(this.zoom)
       .transition()
       .call(this.zoom.transform, d3.zoomIdentity.translate(this.state.x,this.state.y).scale(this.state.zoomScale));
-
 
   }
 
@@ -132,11 +138,14 @@ class Choropleth extends React.Component {
       .attr('d', path)
       .attr('fill', d => colorScale(d.properties[this.state.property]))
       .style('stroke', '#000')
-      .on('click', (event, d) => this.props.onSelectRegion(d.properties.STATE_NAME, ''))
+      .on('click', (event, d) => {
+        this.props.onSelectRegion(d.properties.STATE_NAME, '');
+        this.setState({region: d.properties.STATE_NAME});
+      })
       .on('mouseover', (event, d) => {
         this.props.tooltip
           .style('visibility', 'visible');
-        this.props.tooltip.html(getTooltipText(d.properties.STATE_NAME,
+        this.props.tooltip.html(this.getTooltipText(d.properties.STATE_NAME,
             this.props.currentFeature, d.properties[this.state.property],
             this.props.currentYear))
           .style('left', (event.pageX + 10) + 'px')
@@ -157,11 +166,14 @@ class Choropleth extends React.Component {
       .attr('d', path)
       .attr('fill', d => colorScale(d.properties[this.state.property]))
       .style('stroke', '#000')
-      .on('click', (event, d) => this.props.onSelectRegion(d.properties.STATE_NAME, d.properties.NAME))
+      .on('click', (event, d) => {
+        this.props.onSelectRegion(d.properties.STATE_NAME, d.properties.NAME);
+        this.setState({region: d.properties.NAME + ', ' + d.properties.STATE_NAME});
+      })
       .on('mouseover', (event, d) => {
         this.props.tooltip
           .style('visibility', 'visible');
-        this.props.tooltip.html(getTooltipText(d.properties.NAME + ' ' + d.properties.STATE_NAME,
+        this.props.tooltip.html(this.getTooltipText(d.properties.NAME + ', ' + d.properties.STATE_NAME,
             this.props.currentFeature,
             d.properties[this.state.property],
             this.props.currentYear))
@@ -196,8 +208,22 @@ class Choropleth extends React.Component {
     }
   }
 
+  getTooltipText(region, feature, value, year) {
+    const roundedValue = value.toFixed(2);
+    const html =
+    `<div>
+      <p><b>${region}<b></p>
+      <p><b>${this.featureList[feature]}: </b>${roundedValue}<p>
+      <p><b>Year: </b>19${year}</p>
+    </div>`
+    return html;
+  }
+
   componentDidMount() {
-    
+    this.props.featureList.forEach(element => {
+      this.featureList[element.key] = element.feature;
+    });
+
     Promise.all([d3.json(this.props.stateGeojson), d3.json(this.props.countyGeojson)]).then(data => {
       this.stateGeojson = data[0].features;
       this.countyGeojson = data[1].features;
@@ -207,7 +233,6 @@ class Choropleth extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log(this.state.map)
     const property = this.props.currentFeature + this.props.currentYear;
     if (prevState.property !== property) {
       this.setState({property: property});
@@ -216,6 +241,7 @@ class Choropleth extends React.Component {
   }
 
   render() {
+    const text = (this.state.region==='') ? 'None' : this.state.region;
     return (
       <div style={{height: '100%'}}>
         <Row gutter={[16, 16]} style={{height: '100%'}}>
@@ -228,6 +254,10 @@ class Choropleth extends React.Component {
               <Button onClick={this.increaseZoomScale}>+</Button>
               <Button onClick={this.decreaseZoomScale}>-</Button>
             </div>
+            <div>
+              Selected region: {text}
+            </div>
+            <Button onClick={this.resetSelectedRegion}>Reset selected region</Button>
           </Col>
           <Col span={20}>
           <div style={{height: '100%', width: '100%'}} ref={this.canvasRef}>

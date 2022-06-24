@@ -1,5 +1,5 @@
 {
-  "name": "inf8808-project",
+  "name": "ncovr-viz",
   "version": "0.1.0",
   "homepage": "https://yuri7718.github.io/ncovr-viz/",
   "private": true,
@@ -18,6 +18,8 @@
     "web-vitals": "^2.1.4"
   },
   "scripts": {
+    "predeploy": "npm run build",
+    "deploy": "gh-pages -d build",
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
@@ -42,6 +44,7 @@
     ]
   },
   "devDependencies": {
-    "d3-legend": "^1.0.0"
+    "d3-legend": "^1.0.0",
+    "gh-pages": "^4.0.0"
   }
 }
