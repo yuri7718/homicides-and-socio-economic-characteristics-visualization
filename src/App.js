@@ -11,6 +11,7 @@ import natGeojson from './assets/NAT.geojson';
 import statesGeojson from './assets/US_states.geojson';
 import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
 import { createTooltip } from './tooltip';
+import ScatterPlot from './scatter-plot/ScatterPlot';
 
 class App extends React.Component {
   constructor(props) {
@@ -77,7 +78,7 @@ class App extends React.Component {
       this.fetchData();
     }
     const firstRowHeight = 700;
-    const secondRowHeight = 500;
+    const secondRowHeight = 1080-firstRowHeight;
     //console.log(this.state)
     return (
       /*<div className="App">
@@ -131,7 +132,7 @@ class App extends React.Component {
             <Col span={6} >
               <Card style={{height: firstRowHeight}}></Card>
             </Col>
-            <Col span={16} >
+            <Col span={14} >
               <Card style={{height: secondRowHeight}}>
                 <ParallelCoordinates
                   featureList={this.features}
@@ -142,8 +143,18 @@ class App extends React.Component {
                 />
               </Card>
             </Col>
-            <Col span={8} >
-              <Card style={{height: secondRowHeight}}>adfdf</Card>
+            <Col span={10} >
+              <Card style={{height: secondRowHeight}}>
+                <ScatterPlot
+                  featureList={this.features}
+                  stateCSV={this.state.stateDataset}
+                  countyCSV={this.state.countyDataset}
+                  currentState={this.state.state}
+                  //currentCounty={this.state.county}
+                  currentFeature={this.state.feature}
+                  currentYear={this.state.year}
+                />
+              </Card>
             </Col>
           </Row>
         </Layout>

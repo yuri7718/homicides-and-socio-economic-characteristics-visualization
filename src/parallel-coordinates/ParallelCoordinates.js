@@ -17,6 +17,7 @@ class ParallelCoordinates extends React.Component {
   drawParallelCoordinates(data) {
 
     const {scrollWidth, scrollHeight} = this.canvasRef.current;
+
     const margin = {top: 50, right: 50, bottom: 50, left: 50};
     const width = scrollWidth - margin.left - margin.right;
     const height = scrollHeight - margin.top - margin.bottom;
@@ -44,7 +45,7 @@ class ParallelCoordinates extends React.Component {
     const path = d => {
       return d3.line()(features.map(feature => {
         const yScale = yScales[feature];
-        return [xScale(feature), yScale(d[feature])];
+        return [xScale(feature), yScale(Number(d[feature]))];
       }));
     }
 
@@ -78,7 +79,7 @@ class ParallelCoordinates extends React.Component {
 
   componentDidUpdate(prevProps, prevState) { 
     if (prevProps.currentState !== this.props.currentState) {
-      console.log(this.props.currentState)
+      //console.log(this.props.currentState)
     }
   }
 
