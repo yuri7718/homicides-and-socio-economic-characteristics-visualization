@@ -1,6 +1,7 @@
 import React from 'react';
 import * as d3 from 'd3';
-import { getColorScale, getExtrema, showMap, hideMap } from './helper';
+import { getColorScale, getExtrema, showMap, hideMap, getTooltipText } from './helper';
+import { Segmented } from 'antd';
 
 class Choropleth extends React.Component {
   constructor(props) {
@@ -10,7 +11,8 @@ class Choropleth extends React.Component {
       showState: true,
       x: 0,
       y: 0,
-      zoomScale: 1
+      zoomScale: 1,
+      map: 'CHOROPLETH'
     }
 
     // geojson data
@@ -25,8 +27,14 @@ class Choropleth extends React.Component {
     this.COUNTY_MAP_ID = 'g-county';
 
     // number of colors for the color scale
-    this.STATE_COLORS = 11;
-    this.COUNTY_COLORS = 11;
+    this.STATE_COLORS = 7;
+    this.COUNTY_COLORS = 7;
+  }
+
+  toggleMapType = (value) => {
+    //event.preventDefault();
+    console.log(value)
+    this.setState({map: value});
   }
 
   drawMap() {
@@ -45,7 +53,7 @@ class Choropleth extends React.Component {
 
     d3.selectAll('#' + this.STATE_MAP_ID).remove();
     d3.selectAll('#' + this.COUNTY_MAP_ID).remove();
-    const svg = d3.select('#map');
+    const svg = d3.select(this.canvasRef.current).select('svg');
 
     this.drawStates(svg, stateColorScale, path);
     this.drawCounties(svg, countyColorScale, path);
@@ -71,9 +79,12 @@ class Choropleth extends React.Component {
     svg.call(zoom)
       .transition()
       .call(zoom.transform, d3.zoomIdentity.translate(this.state.x,this.state.y).scale(this.state.zoomScale));
+
+
   }
 
   drawStates(svg, colorScale, path) {
+    
     svg.append('g')
       .attr('id', this.STATE_MAP_ID)
       .selectAll('path')
@@ -90,7 +101,25 @@ class Choropleth extends React.Component {
         }
       })
       .style('stroke', '#000')
-      .on('click', (event, d) => this.props.onSelectRegion(d.properties.STATE_NAME, ''));
+      .on('click', (event, d) => this.props.onSelectRegion(d.properties.STATE_NAME, ''))
+      
+      .on('mouseover', (event, d) => {
+        const feature = this.props.stateDataset.find(state => state.STATE_NAME === d.properties.STATE_NAME);
+        let value = 0;
+        if (typeof feature !== 'undefined') {
+          value = feature[this.state.property];
+        }
+        this.props.tooltip
+          .style('visibility', 'visible');
+        this.props.tooltip.html(getTooltipText(d.properties.STATE_NAME,
+            this.props.currentFeature, value,
+            this.props.currentYear))
+          .style('left', (event.pageX + 10) + 'px')
+          .style('top', (event.pageY + 10) + 'px');
+      })
+      .on('mouseout', (event, d) => {
+        this.props.tooltip.style('visibility', 'hidden')
+      });
   }
 
   drawCounties(svg, colorScale, path) {
@@ -103,7 +132,20 @@ class Choropleth extends React.Component {
       .attr('d', path)
       .attr('fill', d => colorScale(d.properties[this.state.property]))
       .style('stroke', '#000')
-      .on('click', (event, d) => this.props.onSelectRegion(d.properties.STATE_NAME, d.properties.NAME));
+      .on('click', (event, d) => this.props.onSelectRegion(d.properties.STATE_NAME, d.properties.NAME))
+      .on('mouseover', (event, d) => {
+        this.props.tooltip
+          .style('visibility', 'visible');
+        this.props.tooltip.html(getTooltipText(d.properties.NAME + ' ' + d.properties.STATE_NAME,
+            this.props.currentFeature,
+            d.properties[this.state.property],
+            this.props.currentYear))
+          .style('left', (event.pageX + 10) + 'px')
+          .style('top', (event.pageY + 10) + 'px');
+      })
+      .on('mouseout', (event, d) => {
+        this.props.tooltip.style('visibility', 'hidden')
+      });
   }
 
   /**
@@ -131,6 +173,7 @@ class Choropleth extends React.Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
+    console.log(this.state.map)
     const property = this.props.currentFeature + this.props.currentYear;
     if (prevState.property !== property) {
       this.setState({property: property});
@@ -141,7 +184,10 @@ class Choropleth extends React.Component {
   render() {
     return (
       <div style={{height: '100%'}} ref={this.canvasRef}>
-        <svg id="map" style={{width: '100%', height: '100%'}}></svg>
+        <Segmented options={['CHOROPLETH', 'HEXBIN']} value={this.state.map} onChange={this.toggleMapType} />
+        <svg id="map" style={{width: '100%', height: '100%'}}>
+          <g id='root'></g>
+        </svg>
       </div>
     );
   }

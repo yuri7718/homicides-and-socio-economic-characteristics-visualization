@@ -11,7 +11,7 @@ export function getColorScale(featureExtrema, nColors) {
   
   return d3.scaleQuantile()
     .domain(d3.extent(featureExtrema))
-    .range(d3.schemeBrBG[nColors]);
+    .range(d3.schemeGnBu[nColors]);
 }
 
 /**
@@ -37,6 +37,7 @@ export function getExtrema(feature, years, dataGeojson) {
   return featureExtrema;
 }
 
+
 export function showMap(mapID) {
   d3.select(mapID)
     .style('visibility', 'visible');
@@ -45,4 +46,14 @@ export function showMap(mapID) {
 export function hideMap(mapID) {
   d3.select(mapID)
     .style('visibility', 'hidden');
+}
+
+export function getTooltipText(region, feature, value, year) {
+  const html =
+  `<div>
+    <p>${region}</p>
+    <p><b>${feature}: </b>${value}<p>
+    <p><b>Year: </b>${year}</p>
+  </div>`
+  return html;
 }

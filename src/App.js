@@ -10,6 +10,7 @@ import Choropleth from './map/Choropleth';
 import natGeojson from './assets/NAT.geojson';
 import statesGeojson from './assets/US_states.geojson';
 import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
+import { createTooltip } from './tooltip';
 
 class App extends React.Component {
   constructor(props) {
@@ -41,6 +42,8 @@ class App extends React.Component {
     this.selectFeature = this.selectFeature.bind(this);
     //this.selectTime = this.selectTime.bind(this);
     this.selectRegion = this.selectRegion.bind(this);
+
+    this.tooltip = createTooltip();
   }
 
   selectFeature(e) {
@@ -66,7 +69,7 @@ class App extends React.Component {
   }
 
   componentDidUpdate() {
-    console.log(this.state)
+    //console.log(this.state)
   }
 
   render() {
@@ -120,6 +123,7 @@ class App extends React.Component {
                   currentYear={this.state.year}
                   years={this.years}
                   onSelectRegion={this.selectRegion}
+                  tooltip={this.tooltip}
                 />
               </Card>
             </Col>

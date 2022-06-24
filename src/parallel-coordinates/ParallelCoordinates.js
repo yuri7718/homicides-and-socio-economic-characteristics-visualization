@@ -60,7 +60,6 @@ class ParallelCoordinates extends React.Component {
       .style("text-anchor", "middle")
       .attr("y", 10)
       .text(function(d) { 
-        console.log(d);
         return d; })
       .style("fill", "black")
       .attr('id', 'label-test')
@@ -69,20 +68,17 @@ class ParallelCoordinates extends React.Component {
   }
 
   componentDidMount() {
-    //this.drawParallelCoordinates(this.props.stateCSV);
     
   }
 
   componentDidUpdate() { 
-    console.log("parallel",this.props.currentYear);
-    //this.drawParallelCoordinates(this.props.stateCSV)
+    
   }
 
 
   render() {
     if (this.props.stateCSV.length > 0) {
       this.drawParallelCoordinates(this.props.stateCSV);
-      console.log("called");
     }
     return (
       <div style={{height: '100%'}} ref={this.canvasRef}>

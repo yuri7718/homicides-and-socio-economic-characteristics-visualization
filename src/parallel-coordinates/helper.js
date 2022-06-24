@@ -10,8 +10,6 @@ import * as d3 from 'd3';
  */
 export function getYScales(data, features, bottom, top) {
   
-  let a = data.map(d => Number(d['HR60']));
-  console.log(a)
   const scales = {};
 
   features.forEach(feature => {
