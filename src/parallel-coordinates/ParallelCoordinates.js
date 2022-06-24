@@ -1,7 +1,7 @@
 import React from 'react';
 import * as d3 from 'd3';
 import { Spin } from 'antd';
-import { getStateData, getScales } from './helper';
+import { getStateData, getYScales } from './helper';
 
 class ParallelCoordinates extends React.Component {
   constructor(props) {
@@ -11,46 +11,60 @@ class ParallelCoordinates extends React.Component {
   }
 
   drawParallelCoordinates(data) {
+
     const {scrollWidth, scrollHeight} = this.canvasRef.current;
-    const margin = {top: 30, right: 30, bottom: 30, left: 30};
+    const margin = {top: 50, right: 50, bottom: 50, left: 50};
     const width = scrollWidth - margin.left - margin.right;
     const height = scrollHeight - margin.top - margin.bottom;
 
 
-    const svg = d3.select('#parallel-coordinates')
-      .attr('width', scrollWidth)
-      .attr('height', scrollHeight)
-      .append('g')
+    const svg = d3.select(this.canvasRef.current).select('svg')
+      .attr('width', width)
+      .attr('height', height)
+
+    const rootGroup = svg.select('g#root');
+
+    rootGroup.append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
 
-    const featureNames = Object.keys(data[0]).filter(key => key.slice(-2) == this.props.currentYear);
-    const yScales = getScales(this.props.stateCSV, this.props.currentYear, height);
-    const xScale = d3.scalePoint()
-      .range([0, width])
-      .domain(featureNames);
+    const features = Object.keys(data[0]).filter(key => key.slice(-2) == this.props.currentYear);
 
-    function path(d) {
-      return d3.line()(featureNames.map(function(p) { return [xScale(p), yScales[p](d[p])]; }));
+    const yScales = getYScales(data, features, margin.top + height, margin.top);
+    const xScale = d3.scalePoint()
+      .range([margin.left, width])
+      .domain(features);
+
+    const path = d => {
+      return d3.line()(features.map(feature => {
+        const yScale = yScales[feature];
+        return [xScale(feature), yScale(d[feature])];
+      }));
     }
 
-    svg.selectAll('myPath')
+    rootGroup.selectAll('path')
       .data(data)
       .join('path')
       .attr('d', path)
       .style('fill', 'none')
-      .style('stroke', '#000')
+      .style('stroke', '#69b3a2')
+      //.opacity(0.5);
     
-    svg.selectAll("myAxis")
-      .data(featureNames).enter()
+    
+    rootGroup.selectAll("myAxis")
+      .data(features).enter()
       .append("g")
-      .attr("class", "axis")
-      .attr("transform", function(d) { return `translate(${xScale(d)})`})
+      .attr('id', 'axis-test')
+      .attr('transform', d => `translate(${xScale(d)})`)
       .each(function(d) { d3.select(this).call(d3.axisLeft().ticks(5).scale(yScales[d])); })
       .append("text")
       .style("text-anchor", "middle")
-      .attr("y", -9)
-      .text(function(d) { return d; })
+      .attr("y", 10)
+      .text(function(d) { 
+        console.log(d);
+        return d; })
       .style("fill", "black")
+      .attr('id', 'label-test')
+      
   
   }
 
@@ -72,7 +86,9 @@ class ParallelCoordinates extends React.Component {
     }
     return (
       <div style={{height: '100%'}} ref={this.canvasRef}>
-        <svg id='parallel-coordinates' style={{width: '100%', height: '100%'}}></svg>
+        <svg style={{width: '100%', height: '100%'}}>
+          <g id='root'></g>
+        </svg>
       </div>
     )
   }

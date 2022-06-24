@@ -129,6 +129,7 @@ class App extends React.Component {
             <Col span={16} >
               <Card style={{height: secondRowHeight}}>
                 <ParallelCoordinates
+                  featureList={this.features}
                   stateCSV={this.state.stateDataset}
                   currentYear={this.state.year}
                 />

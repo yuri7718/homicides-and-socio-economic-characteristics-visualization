@@ -1,16 +1,26 @@
 import * as d3 from 'd3';
 
-export function getScales(data, year, height) {
+/**
+ * 
+ * @param {*} data 
+ * @param {*} features 
+ * @param {*} bottom 
+ * @param {*} top 
+ * @returns 
+ */
+export function getYScales(data, features, bottom, top) {
+  
+  let a = data.map(d => Number(d['HR60']));
+  console.log(a)
   const scales = {};
-  
-  const featureNames = Object.keys(data[0]).filter(key => key.slice(-2) == year);
-  
-  featureNames.forEach(featureName => {
-    let features = data.map(d => d[featureName]);
-    scales[featureName] = d3.scaleLinear()
-      .domain(d3.extent(features))
-      .range([height, 0]);
+
+  features.forEach(feature => {
+    //console.log(data.map(d => d[feature]));
+    scales[feature] = d3.scaleLinear()
+      .domain(d3.extent(data, item => Number(item[feature])))
+      .range([bottom, top]);
   });
+
   return scales;
 }
 
