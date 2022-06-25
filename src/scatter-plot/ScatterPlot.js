@@ -14,7 +14,7 @@ class ScatterPlot extends React.Component {
   drawScatterPlot(data) {
     const {scrollWidth, scrollHeight} = this.canvasRef.current;
 
-    const margin = {top: 30, right: 30, bottom: 30, left: 70};
+    const margin = {top: 30, right: 30, bottom: 50, left: 70};
     const width = scrollWidth - margin.left - margin.right;
     const height = scrollHeight - margin.top - margin.bottom;
 
