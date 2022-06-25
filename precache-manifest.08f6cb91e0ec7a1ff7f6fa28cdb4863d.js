@@ -1,11 +1,11 @@
 self.__precacheManifest = [
   {
-    "revision": "1b423940fd64cb3aad91",
+    "revision": "16fb471166adea8106b7",
     "url": "/ncovr-visualization/static/css/main.c68e7a53.chunk.css"
   },
   {
-    "revision": "1b423940fd64cb3aad91",
-    "url": "/ncovr-visualization/static/js/main.1b423940.chunk.js"
+    "revision": "16fb471166adea8106b7",
+    "url": "/ncovr-visualization/static/js/main.16fb4711.chunk.js"
   },
   {
     "revision": "c363cfba47308ab272ac",
@@ -40,7 +40,7 @@ self.__precacheManifest = [
     "url": "/ncovr-visualization/static/media/US_states.2aa3311d.geojson"
   },
   {
-    "revision": "9a59740b4406d9de4cdcd1188d02b33b",
+    "revision": "8a79cc5adf57a872a27d7fd015e3a452",
     "url": "/ncovr-visualization/index.html"
   }
 ];
