@@ -1,23 +1,23 @@
 self.__precacheManifest = [
   {
-    "revision": "928fccac7f33bc9f1304",
-    "url": "/ncovr-visualization/static/css/main.b982d6f1.chunk.css"
+    "revision": "b5062e1b4e839f0dc9c1",
+    "url": "/ncovr-visualization/static/css/main.c68e7a53.chunk.css"
   },
   {
-    "revision": "928fccac7f33bc9f1304",
-    "url": "/ncovr-visualization/static/js/main.928fccac.chunk.js"
+    "revision": "b5062e1b4e839f0dc9c1",
+    "url": "/ncovr-visualization/static/js/main.b5062e1b.chunk.js"
   },
   {
     "revision": "c363cfba47308ab272ac",
     "url": "/ncovr-visualization/static/js/1.c363cfba.chunk.js"
   },
   {
-    "revision": "159faeea9cfe47d5373c",
-    "url": "/ncovr-visualization/static/css/2.c5e218d7.chunk.css"
+    "revision": "271242d72c4d5380521b",
+    "url": "/ncovr-visualization/static/css/2.546bb506.chunk.css"
   },
   {
-    "revision": "159faeea9cfe47d5373c",
-    "url": "/ncovr-visualization/static/js/2.159faeea.chunk.js"
+    "revision": "271242d72c4d5380521b",
+    "url": "/ncovr-visualization/static/js/2.271242d7.chunk.js"
   },
   {
     "revision": "6855777cd482e6707770",
@@ -40,7 +40,7 @@ self.__precacheManifest = [
     "url": "/ncovr-visualization/static/media/US_states.2aa3311d.geojson"
   },
   {
-    "revision": "a15512f188d22da1b93e7cab8790d8dc",
+    "revision": "58840aa30f22589b77c3da4bda9dd613",
     "url": "/ncovr-visualization/index.html"
   }
 ];
