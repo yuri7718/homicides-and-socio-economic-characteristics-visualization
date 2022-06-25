@@ -12,6 +12,7 @@ import statesGeojson from './assets/US_states.geojson';
 import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
 import { createTooltip } from './tooltip';
 import ScatterPlot from './scatter-plot/ScatterPlot';
+import Heatmap from './map/Heatmap';
 
 class App extends React.Component {
   constructor(props) {
@@ -130,7 +131,14 @@ class App extends React.Component {
               </Card>
             </Col>
             <Col span={6} >
-              <Card style={{height: firstRowHeight}}></Card>
+              <Card style={{height: firstRowHeight}}>
+              <Heatmap
+                  featureList={this.features}
+                  years={this.years}
+                  countyCSV={this.state.countyDataset}
+                  currentState={this.state.state}
+                />
+              </Card>
             </Col>
             <Col span={14} >
               <Card style={{height: secondRowHeight}}>
