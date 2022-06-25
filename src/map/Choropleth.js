@@ -3,7 +3,7 @@ import * as d3 from 'd3';
 import { getColorScale, getExtrema, showMap, hideMap, getTooltipText, showStateLegend, hideStateLegend } from './helper';
 import { Segmented, Row, Col, Button } from 'antd';
 import d3legend from 'd3-svg-legend';
-
+import {createTooltip} from '../tooltip';
 class Choropleth extends React.Component {
   constructor(props) {
     super(props);
@@ -35,6 +35,15 @@ class Choropleth extends React.Component {
     this.zoom = Object;
 
     this.featureList = {};
+
+
+    this.tooltip = d3.select('body')
+    .append('div')
+    .attr('class', 'tooltip')
+    .style('visibility', 'hidden')
+    .style('left', '0px')
+    .style('top', '0px');
+
   }
 
   toggleMapType = (value) => {
@@ -135,6 +144,7 @@ class Choropleth extends React.Component {
 
   drawStates(svg, colorScale, path) {
     
+
     svg.append('g')
       .attr('id', this.STATE_MAP_ID)
       .selectAll('path')
@@ -149,16 +159,16 @@ class Choropleth extends React.Component {
         this.setState({region: d.properties.STATE_NAME});
       })
       .on('mouseover', (event, d) => {
-        this.props.tooltip
+        this.tooltip
           .style('visibility', 'visible');
-        this.props.tooltip.html(this.getTooltipText(d.properties.STATE_NAME,
+        this.tooltip.html(this.getTooltipText(d.properties.STATE_NAME,
             this.props.currentFeature, d.properties[this.state.property],
             this.props.currentYear))
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY + 10) + 'px');
       })
       .on('mouseout', (event, d) => {
-        this.props.tooltip.style('visibility', 'hidden')
+        this.tooltip.style('visibility', 'hidden')
       });
   }
 
@@ -177,9 +187,9 @@ class Choropleth extends React.Component {
         this.setState({region: d.properties.NAME + ', ' + d.properties.STATE_NAME});
       })
       .on('mouseover', (event, d) => {
-        this.props.tooltip
+        this.tooltip
           .style('visibility', 'visible');
-        this.props.tooltip.html(this.getTooltipText(d.properties.NAME + ', ' + d.properties.STATE_NAME,
+        this.tooltip.html(this.getTooltipText(d.properties.NAME + ', ' + d.properties.STATE_NAME,
             this.props.currentFeature,
             d.properties[this.state.property],
             this.props.currentYear))
@@ -187,7 +197,7 @@ class Choropleth extends React.Component {
           .style('top', (event.pageY + 10) + 'px');
       })
       .on('mouseout', (event, d) => {
-        this.props.tooltip.style('visibility', 'hidden')
+        this.tooltip.style('visibility', 'hidden')
       });
 
    
@@ -252,8 +262,8 @@ class Choropleth extends React.Component {
     const text = (this.state.region==='') ? 'None' : this.state.region;
     return (
       <div style={{height: '100%'}}>
-        <Row gutter={[16, 16]} style={{height: '100%'}}>
-          <Col span={4}>
+        <Row gutter={[20, 16]} style={{height: '100%'}}>
+          <Col span={5}>
             <Segmented options={['CHOROPLETH', 'HEXBIN']} value={this.state.map} onChange={this.toggleMapType} />
             <div>
               <svg id='legend'><g></g></svg>
@@ -267,10 +277,10 @@ class Choropleth extends React.Component {
             </div>
             <Button onClick={this.resetSelectedRegion}>Reset selected region</Button>
           </Col>
-          <Col span={20}>
-          <div style={{height: '100%', width: '100%'}} ref={this.canvasRef}>
-            <svg id='map' style={{width: '100%', height: '100%'}}><g id='root'></g></svg>
-          </div>
+          <Col span={19}>
+            <div style={{height: '100%', width: '100%'}} ref={this.canvasRef}>
+              <svg id='map' style={{width: '100%', height: '95%'}}><g id='root'></g></svg>
+            </div>
           </Col>
         </Row>
       </div>
