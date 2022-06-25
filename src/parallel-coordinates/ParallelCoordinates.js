@@ -10,6 +10,8 @@ class ParallelCoordinates extends React.Component {
     this.canvasRef = React.createRef();
 
     this.title = '';
+
+    this.featureList = {};
   }
 
 
@@ -18,7 +20,7 @@ class ParallelCoordinates extends React.Component {
 
     const {scrollWidth, scrollHeight} = this.canvasRef.current;
 
-    const margin = {top: 50, right: 50, bottom: 50, left: 50};
+    const margin = {top: 90, right: 60, bottom: 50, left: 50};
     const width = scrollWidth - margin.left - margin.right;
     const height = scrollHeight - margin.top - margin.bottom;
 
@@ -36,6 +38,7 @@ class ParallelCoordinates extends React.Component {
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
 
     let features = this.props.featureList.map(feature => feature.key + this.props.currentYear);
+    //let featureLabels = this.props.featureList.map(feature => feature.feature);
 
     const yScales = getYScales(data, features, margin.top + height, margin.top);
     const xScale = d3.scalePoint()
@@ -55,7 +58,7 @@ class ParallelCoordinates extends React.Component {
       .attr('d', path)
       .style('fill', 'none')
       .style('stroke', '#69b3a2')
-    
+    console.log(this.featureList);
     rootGroup.selectAll("myAxis")
       .data(features).enter()
       .append("g")
@@ -64,9 +67,13 @@ class ParallelCoordinates extends React.Component {
       .each(function(d) { d3.select(this).call(d3.axisLeft().ticks(5).scale(yScales[d])); })
       .append("text")
       .style("text-anchor", "middle")
-      .attr("y", 10)
-      .text(function(d) { 
-        return d; })
+      .attr("y", 20)
+      .text(d => { 
+        let f = d.substring(0, d.length-2);
+        return this.featureList[f];
+      })
+      .attr("transform", "translate(10, 30) rotate(-15)")
+     
       .style("fill", "black")
       .attr('id', 'label-test')
       
@@ -74,6 +81,9 @@ class ParallelCoordinates extends React.Component {
   }
 
   componentDidMount() {
+    this.props.featureList.forEach(feature => {
+      this.featureList[feature.key] = feature.feature;
+    })
 
   }
 
