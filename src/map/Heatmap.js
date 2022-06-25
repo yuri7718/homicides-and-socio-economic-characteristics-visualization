@@ -37,7 +37,7 @@ class Heatmap extends React.Component {
     drawHeatMap(data) {
        
         const { scrollWidth, scrollHeight } = this.canvasRef.current;
-        const margins = { top: 30, right: 30, bottom: 30, left: 200 };
+        const margins = { top: 30, right: 30, bottom: 100, left: 200 };
         const width = scrollWidth - margins.left - margins.right;
         const height = scrollHeight - margins.top - margins.bottom;
 
@@ -55,13 +55,13 @@ class Heatmap extends React.Component {
             this.props.years.forEach(year => {
                 let avg = getAverage(data, feature.key, year);
                 
-                cleanedData.push({ feature: feature.feature, year: year, value: avg });
+                cleanedData.push({ feature: feature.feature, year: '19' + year, value: avg });
             })
         });
 
         const xScale = d3.scaleBand()
             .range([0, width])
-            .domain(this.props.years);
+            .domain(this.props.years.map(year => '19' + year));
         
         const yScale = d3.scaleBand()
             .range([0, height])
@@ -76,9 +76,7 @@ class Heatmap extends React.Component {
         const rootGroup = svg.select('g#root')
             .attr('transform', `translate(${margins.left}, ${margins.top})`);
         
-        
 
-        ////////////////////////////////////////////////
         
         //Append x axis
         rootGroup.append('g')
@@ -90,10 +88,26 @@ class Heatmap extends React.Component {
             .call(d3.axisLeft(yScale))
             //.attr('transform', `translate(${width}, 0)`)
 
+        const dataPerFeature = {};
+        cleanedData.forEach(d => {
+            if (dataPerFeature.hasOwnProperty(d.feature)) {
+                dataPerFeature[d.feature].push(d.value);
+            } else {
+                dataPerFeature[d.feature] = [d.value];
+            }
+        })
+        
+        const colorScales = {};
+        for (let key in dataPerFeature) {
+            colorScales[key] = d3.scaleLinear()
+                .range(['#eff3ff', '#08519c'])
+                .domain(d3.extent(dataPerFeature[key]));
+        }
+        /*
         const colorScale = d3.scaleLinear()
-            .range(["white", "#69b3a2"])
+            .range(['#eff3ff', '#08519c'])
             .domain(d3.extent(cleanedData.map(d => d.value)));
-
+        */
         rootGroup.selectAll()
             .data(cleanedData)
             .enter()
@@ -102,7 +116,7 @@ class Heatmap extends React.Component {
             .attr('y', d => yScale(d.feature))
             .attr('width', xScale.bandwidth())
             .attr('height', yScale.bandwidth())
-            .style('fill', d => colorScale(d.value))
+            .style('fill', d => colorScales[d.feature](d.value))
 
         yAxis.selectAll('g').selectAll('text')
             .attr('font-weight', d => {
