@@ -29,6 +29,7 @@ class Heatmap extends React.Component {
         .append('div')
         .attr('class', 'tooltip')
         .style('position', 'absolute')
+        .style('padding', '15px')
         .style('visibility', 'hidden')
         .style('background-color', 'black')
         .style('opacity', 0.7)
