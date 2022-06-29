@@ -97,11 +97,28 @@ class ScatterPlot extends React.Component {
         const stats = new Statistics(this.props.stateCSV, columns);
         pearson = stats.correlationCoefficient(xKey, yKey).correlationCoefficient.toFixed(2);
         spearman = stats.spearmansRho(xKey, yKey).rho.toFixed(2);
-        console.log(spearman)
   
       } else {
         this.clearChart();
         this.drawScatterPlot(this.props.countyCSV);
+
+        const xKey = 'HR' + this.props.currentYear;
+        const yKey = this.props.currentFeature + this.props.currentYear;
+        
+        const columns = {};
+        columns[xKey] = 'interval';
+        columns[yKey] = 'interval';
+      
+        console.log("stateCSV", this.props.stateCSV)
+
+        const data = this.props.countyCSV.filter(d => d.STATE_NAME === this.props.currentState);
+        console.log("filtered", data);
+        const stats = new Statistics(data, columns);
+        pearson = stats.correlationCoefficient(xKey, yKey).correlationCoefficient.toFixed(2);
+        spearman = stats.spearmansRho(xKey, yKey).rho.toFixed(2);
+        console.log(pearson)
+        console.log(spearman)
+
       }
     }
     const title = this.props.currentState === '' ? 
