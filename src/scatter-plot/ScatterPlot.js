@@ -94,7 +94,7 @@ class ScatterPlot extends React.Component {
         <Row style={{height: '100%'}}>
           <Col span={20}>
             <div style={{textAlign: 'center'}}>{title}</div>
-            <div style={{height: '90%'}} ref={this.canvasRef}>
+            <div style={{height: '85%'}} ref={this.canvasRef}>
               <svg style={{height: '100%', width: '100%'}}><g id='root'></g></svg>
             </div>
           </Col>

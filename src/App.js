@@ -6,13 +6,18 @@ import natCounties from './assets/NAT_counties.csv';
 import natStates from './assets/NAT_states.csv';
 import Feature from './feature/Feature';
 import Time from './time/Time';
-import Choropleth from './map/Choropleth';
-import natGeojson from './assets/NAT.geojson';
-import statesGeojson from './assets/US_states.geojson';
+import Map from './map/Map';
 import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
 import { createTooltip } from './tooltip';
 import ScatterPlot from './scatter-plot/ScatterPlot';
 import Heatmap from './map/Heatmap';
+
+/**
+ * Geojson data
+ */
+import natGeojson from './assets/NAT.geojson';
+import statesGeojson from './assets/states_choropleth.geojson';
+import statesHexbinGeojson from './assets/states_hexbin.geojson';
 
 class App extends React.Component {
   constructor(props) {
@@ -46,6 +51,7 @@ class App extends React.Component {
     this.selectRegion = this.selectRegion.bind(this);
 
     //this.tooltip = createTooltip();
+    this.statesHexbinDataset = [];
   }
 
   selectFeature(e) {
@@ -65,8 +71,9 @@ class App extends React.Component {
   }
 
   fetchData() {
-    Promise.all([d3.csv(natCounties), d3.csv(natStates)]).then(data => {
+    Promise.all([d3.csv(natCounties), d3.csv(natStates), d3.json(statesHexbinGeojson)]).then(data => {
       this.setState({countyDataset: data[0], stateDataset: data[1]});
+      this.statesHexbinDataset = data[2].features;
     });
   }
 
@@ -119,7 +126,7 @@ class App extends React.Component {
                       timeline={this.years}
                       onSelectTime={this.selectTime}
                     />
-                    <Choropleth
+                    <Map
                       stateGeojson={statesGeojson}
                       stateDataset={this.state.stateDataset}
                       countyGeojson={natGeojson}
@@ -129,6 +136,7 @@ class App extends React.Component {
                       onSelectRegion={this.selectRegion}
                       //tooltip={this.tooltip}
                       featureList={this.features}
+                      stateHexbin={this.statesHexbinDataset}
                     />
                   </Card>
                 </Col>
