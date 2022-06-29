@@ -13,6 +13,9 @@ import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
 import { createTooltip } from './tooltip';
 import ScatterPlot from './scatter-plot/ScatterPlot';
 import Heatmap from './map/Heatmap';
+import { Modal } from 'react-responsive-modal';
+import 'react-responsive-modal/styles.css';
+import TutorialModalComponent from './modals/TutorialModalComponent'
 
 class Viz extends React.Component {
     constructor(props) {
@@ -24,7 +27,8 @@ class Viz extends React.Component {
             feature: 'HR',
             year: 60,
             state: '',
-            county: ''
+            county: '',
+            openModal: true
         };
 
         this.features = [
@@ -46,6 +50,16 @@ class Viz extends React.Component {
         this.selectRegion = this.selectRegion.bind(this);
 
         //this.tooltip = createTooltip();
+    }
+
+////////////////////////////////////////////////////
+    onClickButton = e => {
+        e.preventDefault()
+        this.setState({ openModal: true })
+    }
+
+    onCloseModal = () => {
+        this.setState({ openModal: false })
     }
 
     selectFeature(e) {
@@ -84,6 +98,7 @@ class Viz extends React.Component {
         return (
 
             <div className="App">
+      
                 <Layout className="layout">
                     <Row gutter={[6, 6]}>
                         <Col span={24}>
@@ -158,6 +173,13 @@ class Viz extends React.Component {
                         </Col>
                     </Row>
                 </Layout>
+
+                <div>
+                    <button onClick={this.onClickButton}>Click Me</button>
+                    <Modal open={this.state.openModal} onClose={this.onCloseModal}>
+                        <TutorialModalComponent />
+                    </Modal>
+                </div>
             </div>
         );
     }
