@@ -1,9 +1,8 @@
 import React from 'react';
 import * as d3 from 'd3';
-import { getColorScale, getExtrema, showMap, hideMap, getTooltipText, showStateLegend, hideStateLegend } from './helper';
+import { getColorScale, getExtrema, showMap, hideMap, getTooltipText, showStateLegend, hideStateLegend, showSVG, hideSVG} from './helper';
 import { Segmented, Row, Col, Button } from 'antd';
 import d3legend from 'd3-svg-legend';
-import * as d3hexgrid from 'd3-hexgrid';
 
 class Map extends React.Component {
   constructor(props) {
@@ -26,8 +25,8 @@ class Map extends React.Component {
     this.ZOOM_SCALE_THRESHOLD = 2;
 
     // map id
-    this.STATE_MAP_ID = 'g-state';
-    this.COUNTY_MAP_ID = 'g-county';
+    this.STATE_ID = 'g-state';
+    this.COUNTY_ID = 'g-county';
 
     // number of colors for the color scale
     this.STATE_COLORS = 7;
@@ -39,56 +38,55 @@ class Map extends React.Component {
 
 
     this.tooltip = d3.select('body')
-    .append('div')
-    .attr('class', 'tooltip')
-    .style('visibility', 'hidden')
-    .style('left', '0px')
-    .style('top', '0px');
-
-    this.us = [];
-
+      .append('div')
+      .attr('class', 'tooltip')
+      .style('visibility', 'hidden')
+      .style('left', '0px')
+      .style('top', '0px');
   }
 
-  toggleMapType = (value) => {
-    //event.preventDefault();
-    //console.log(value)
-    this.setState({map: value}, () => {
-      this.drawMap();
-    });
-    
+
+  /**
+   * Switch between CHOROPLETH and HEXBIN
+   * @param {string} type 
+   */
+  toggleMapType = (type) => {
+    this.setState({map: type}, () => this.drawMap());
   }
 
+
+  /**
+   * Increase zoom scale when the button + is clicked
+   */
   increaseZoomScale = () => {
     this.zoomTransition(d3.select('#map'), 1.2);  
   }
 
+  /**
+   * Decrease zoom scale when the button - is clicked
+   */
   decreaseZoomScale = () => {
     this.zoomTransition(d3.select('#map'), 0.8);
-  }
-
-  resetSelectedRegion = () => {
-    this.setState({region: ''}, () => {this.props.onSelectRegion('', '');})
   }
 
   zoomTransition(svg, zoomLevel) {
     svg.transition()
       .delay(100)
-      .duration(700)
+      .duration(500)
       .call(this.zoom.scaleBy, zoomLevel);
   }
 
 
+  /**
+   * Reset region to empty string when the button "Reset selected region" is clicked
+   */
+  resetSelectedRegion = () => {
+    this.setState({region: ''}, () => this.props.onSelectRegion('', ''));
+  }
+
 
   drawMap() {
     const {scrollWidth, scrollHeight} = this.canvasRef.current;
-
-    /*
-    const projection = d3.geoAlbersUsa()
-      .scale(scrollWidth / 1.2)
-      .translate([scrollWidth / 2, scrollHeight / 2]);
-    
-    const path = d3.geoPath()
-      .projection(projection);*/
 
     const countyExtrema = getExtrema(this.props.currentFeature, this.props.years, this.countyGeojson);
     const stateExtrema = getExtrema(this.props.currentFeature, this.props.years, this.stateGeojson);
@@ -96,47 +94,52 @@ class Map extends React.Component {
     const stateColorScale = getColorScale(stateExtrema, this.STATE_COLORS);
     const countyColorScale = getColorScale(countyExtrema, this.COUNTY_COLORS);
 
-    //d3.selectAll('#' + this.STATE_MAP_ID).remove();
-    //d3.selectAll('#' + this.COUNTY_MAP_ID).remove();
-    this.clearMap();
+    this.clearSVG();
 
     const svg = d3.select(this.canvasRef.current).select('svg#map');
-    var projection;
+
+    var projection = null;
+
     // draw map
     switch(this.state.map) {
       case 'CHOROPLETH':
         projection = d3.geoAlbersUsa()
-        .scale(scrollWidth / 1.2)
-        .translate([scrollWidth / 2, scrollHeight / 2]);
-
+          .scale(scrollWidth / 1.2)
+          .translate([scrollWidth / 2, scrollHeight / 2]);
         this.drawChoroplethStates(svg, projection, stateColorScale);
         this.drawChoroplethCounties(svg, projection, countyColorScale);
         break;
+
       case 'HEXBIN':
         projection = d3.geoMercator()
           .scale(scrollWidth / 1.9)
           .translate([scrollWidth * 1.4, scrollHeight * 1.2]);
-
         this.drawHexbinStates(svg, projection, stateColorScale);
         break;
+      
+      default:
+        break;
     }
-    this.drawStateLegend(stateColorScale);
-    this.drawCountyLegend(countyColorScale);
-    
+
+    this.drawLegend(stateColorScale, countyColorScale);
+
     if (this.state.showState) {
-      // hide county
-      hideMap('#' + this.COUNTY_MAP_ID);
-    
+      // hide map and legend for counties
+      hideSVG(`#${this.COUNTY_ID}`);
     } else {
-      // hide state
-      hideStateLegend(d3.select('#legend').select('#' + this.STATE_MAP_ID))
+      // hide map and legend for states
+      hideSVG(`#${this.STATE_ID}`);
+
+      if (this.state.map === 'HEXBIN') {
+        d3.selectAll('.hexbin').style('visibility', 'visible');
+      }
     }
 
     // zoom function
     const zoomed = event => {
       const {transform} = event;
-      d3.select('#map').selectAll('g').attr('transform', transform);
-      d3.select('#map').selectAll('g').attr('stroke-width', 1 / transform.k);
+      d3.select(this.canvasRef.current).select('svg#map').selectAll('g').attr('transform', transform);
+      d3.select(this.canvasRef.current).select('svg#map').selectAll('g').attr('stroke-width', 1 / transform.k);
       this.setState({x: transform.x, y: transform.y, zoomScale: transform.k}, this.updateZoomedView(this.state.zoomScale));
     };
 
@@ -147,33 +150,44 @@ class Map extends React.Component {
     svg.call(this.zoom)
       .transition()
       .call(this.zoom.transform, d3.zoomIdentity.translate(this.state.x,this.state.y).scale(this.state.zoomScale));
-
   }
 
-  drawStateLegend(colorScale) {
-    const legend = d3legend.legendColor()
+  /**
+   * Draw legend for both states and counties
+   * @param {function} stateColorScale 
+   * @param {function} countyColorScale 
+   */
+  drawLegend(stateColorScale, countyColorScale) {
+    
+    var legend = null;
+
+    // draw legend for states
+    legend = d3legend.legendColor()
       .shapeWidth(30)
       .orient('vertical')
-      .scale(colorScale);
-    d3.select('#legend').append('g').attr('id', this.STATE_MAP_ID).call(legend);
+      .scale(stateColorScale);
+    d3.select('#map-legend').append('g').attr('id', this.STATE_ID).call(legend);
+
+    // draw legend for counties
+    legend = d3legend.legendColor()
+    .shapeWidth(30)
+    .orient('vertical')
+    .scale(countyColorScale);
+    d3.select('#map-legend').append('g').attr('id', this.COUNTY_ID).call(legend);
   }
 
-  drawCountyLegend(colorScale) {
-    const legend = d3legend.legendColor()
-      .shapeWidth(30)
-      .orient('vertical')
-      .scale(colorScale);
-    d3.select('#legend').append('g').attr('id', this.COUNTY_MAP_ID).call(legend);
-  }
 
-  
-
+  /**
+   * Draw choropleth map for states
+   * @param {*} svg 
+   * @param {*} projection 
+   * @param {*} colorScale 
+   */
   drawChoroplethStates(svg, projection, colorScale) {
-    const path = d3.geoPath()
-    .projection(projection);
+    const path = d3.geoPath().projection(projection);
 
     svg.append('g')
-      .attr('id', this.STATE_MAP_ID)
+      .attr('id', this.STATE_ID)
       .selectAll('path')
       .data(this.stateGeojson)
       .enter()
@@ -186,25 +200,31 @@ class Map extends React.Component {
         this.setState({region: d.properties.STATE_NAME});
       })
       .on('mouseover', (event, d) => {
-        this.tooltip
-          .style('visibility', 'visible');
-        this.tooltip.html(this.getTooltipText(d.properties.STATE_NAME,
-            this.props.currentFeature, d.properties[this.state.property],
+        this.tooltip.style('visibility', 'visible');
+        this.tooltip.html(this.getTooltipText(
+            d.properties.STATE_NAME,
+            this.props.currentFeature,
+            d.properties[this.state.property],
             this.props.currentYear))
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY + 10) + 'px');
       })
-      .on('mouseout', (event, d) => {
+      .on('mouseout', () => {
         this.tooltip.style('visibility', 'hidden')
       });
   }
 
+  /**
+   * Draw choropleth map for counties
+   * @param {*} svg 
+   * @param {*} projection 
+   * @param {*} colorScale 
+   */
   drawChoroplethCounties(svg, projection, colorScale) {
-    const path = d3.geoPath()
-    .projection(projection);
+    const path = d3.geoPath().projection(projection);
 
     svg.append('g')
-      .attr('id', this.COUNTY_MAP_ID)
+      .attr('id', this.COUNTY_ID)
       .selectAll('path')
       .data(this.countyGeojson)
       .enter()
@@ -217,8 +237,7 @@ class Map extends React.Component {
         this.setState({region: d.properties.NAME + ', ' + d.properties.STATE_NAME});
       })
       .on('mouseover', (event, d) => {
-        this.tooltip
-          .style('visibility', 'visible');
+        this.tooltip.style('visibility', 'visible');
         this.tooltip.html(this.getTooltipText(d.properties.NAME + ', ' + d.properties.STATE_NAME,
             this.props.currentFeature,
             d.properties[this.state.property],
@@ -231,12 +250,18 @@ class Map extends React.Component {
       });
   }
 
+  /**
+   * Draw hexbin map for states
+   * @param {*} svg 
+   * @param {*} projection 
+   * @param {*} colorScale 
+   */
   drawHexbinStates(svg, projection, colorScale) {
-    const path = d3.geoPath()
-    .projection(projection);
+    const path = d3.geoPath().projection(projection);
 
     svg.append('g')
-      .attr('id', this.STATE_MAP_ID)
+      .attr('id', this.STATE_ID)
+      .attr('class', 'hexbin')
       .selectAll('path')
       .data(this.props.stateHexbin)
       .enter()
@@ -257,7 +282,7 @@ class Map extends React.Component {
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY + 10) + 'px');
       })
-      .on('mouseout', (event, d) => {
+      .on('mouseout', () => {
         this.tooltip.style('visibility', 'hidden')
       });
 
@@ -284,15 +309,17 @@ class Map extends React.Component {
     if (zoomScale > this.ZOOM_SCALE_THRESHOLD && this.state.showState === true) {
       // change to county view
       this.setState({showState: false}, () => {
-        showMap('#' + this.COUNTY_MAP_ID);
-        hideStateLegend(d3.select('#legend').select('#' + this.STATE_MAP_ID));
-
+        hideSVG(`#${this.STATE_ID}`)
+        showSVG(`#${this.COUNTY_ID}`)
+        if (this.state.map === 'HEXBIN') {
+          d3.selectAll('.hexbin').style('visibility', 'visible');
+        }
       });
     } else if (zoomScale <= this.ZOOM_SCALE_THRESHOLD && this.state.showState === false) {
       // change to state view
       this.setState({showState: true}, () => {
-        hideMap('#' + this.COUNTY_MAP_ID);
-        showStateLegend(d3.select('#legend').select('#' + this.STATE_MAP_ID))
+        hideSVG(`#${this.COUNTY_ID}`)
+        showSVG(`#${this.STATE_ID}`)
       });
     }
   }
@@ -308,9 +335,15 @@ class Map extends React.Component {
     return html;
   }
 
-  clearMap() {
+
+  /**
+   * Remove map and legend
+   */
+  clearSVG() {
     d3.select(this.canvasRef.current).select('svg#map').selectAll('*').remove();
+    d3.select('#map-legend').selectAll('*').remove();
   }
+
 
   componentDidMount() {
     this.props.featureList.forEach(element => {
@@ -336,27 +369,25 @@ class Map extends React.Component {
   }
 
   render() {
-    const text = (this.state.region==='') ? 'None' : this.state.region;
+    const selectedRegion = (this.state.region === '') ? 'None' : this.state.region;
     return (
       <div style={{height: '100%'}}>
-        <Row gutter={[20, 16]} style={{height: '100%'}}>
+        <Row gutter={20} style={{height: '100%'}}>
           <Col span={5}>
-            <Segmented options={['CHOROPLETH', 'HEXBIN']} value={this.state.map} onChange={this.toggleMapType} />
-            <div>
-              <svg id='legend'><g></g></svg>
+            <Segmented options={['CHOROPLETH', 'HEXBIN']} value={this.state.map} onChange={this.toggleMapType} style={{margin: '30px 0'}} />
+            <div><svg id='map-legend'></svg></div>
+            <div style={{margin: '50px 0'}}>
+              <Button onClick={this.increaseZoomScale} style={{display: 'block', width: '40px'}}>+</Button>
+              <Button onClick={this.decreaseZoomScale} style={{display: 'block', width: '40px'}}>-</Button>
             </div>
             <div>
-              <Button onClick={this.increaseZoomScale}>+</Button>
-              <Button onClick={this.decreaseZoomScale}>-</Button>
-            </div>
-            <div>
-              Selected region: {text}
+              Selected region: {selectedRegion}
             </div>
             <Button onClick={this.resetSelectedRegion}>Reset selected region</Button>
           </Col>
           <Col span={19}>
             <div style={{height: '100%', width: '100%'}} ref={this.canvasRef}>
-              <svg id='map' style={{width: '100%', height: '95%'}}><g id='root'></g></svg>
+              <svg id='map' style={{width: '100%', height: '95%'}}></svg>
             </div>
           </Col>
         </Row>
