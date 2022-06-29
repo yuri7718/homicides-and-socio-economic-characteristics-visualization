@@ -117,7 +117,7 @@ class Map extends React.Component {
       case 'HEXBIN':
         projection = d3.geoMercator()
           .scale(scrollWidth / 1.9)
-          .translate([scrollWidth * 1.4, scrollHeight * 1.2]);
+          .translate([scrollWidth * 1.37, scrollHeight * 1.05]);
         this.drawHexbinStates(svg, projection, stateColorScale);
         break;
       
