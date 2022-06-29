@@ -10,7 +10,7 @@ import Map from './map/Map';
 import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
 import { createTooltip } from './tooltip';
 import ScatterPlot from './scatter-plot/ScatterPlot';
-import Heatmap from './map/Heatmap';
+import Heatmap from './heatmap/Heatmap';
 import { cleanDataset  } from './helper';
 
 /**
