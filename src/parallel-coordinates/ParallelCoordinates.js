@@ -24,7 +24,7 @@ class ParallelCoordinates extends React.Component {
 
     const {scrollWidth, scrollHeight} = this.canvasRef.current;
 
-    const margin = {top: 90, right: 60, bottom: 50, left: 50};
+    const margin = {top: 50, right: 50, bottom: 50, left: 20};
     const width = scrollWidth;
     const height = scrollHeight;
 
@@ -38,12 +38,13 @@ class ParallelCoordinates extends React.Component {
 
     //const rootGroup = svg.select('g#root');
 
+
     svg.append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
 
     let features = this.props.featureList.map(feature => feature.key + this.props.currentYear);
     //let featureLabels = this.props.featureList.map(feature => feature.feature);
-
+    //console.log(features);
     const yScales = getYScales(data, features, height-margin.bottom, margin.top);
     
     const axisSpacing = width / features.length;
@@ -94,55 +95,43 @@ class ParallelCoordinates extends React.Component {
           .attr('y', 10)
           .attr('text-anchor', 'middle')
           .attr('fill', '#000')
-          .text(d => d)
+          .text(d => {
+            let f = d.substring(0, d.length-2);
+            return this.featureList[f];
+          })
+          .attr("transform", "translate(5, 15) rotate(-10)")
       ).call(brush)
 
     const selections = new Map();
     function brushed({selection}, axisName) {
+      //console.log(axisName);
+      //selection is screen coordinates interval
       if (selection === null) {
         selections.delete(axisName);
       } else {
         //console.log(axisName)
-        selections.set(axisName, selection.map(yScales[axisName]));
+        selections.set(axisName, selection.map(yScales[axisName].invert));
       }
       const selected = [];
       path.each(function(d) {
         //console.log(selections)
         const active = Array.from(selections).every(([axisName, [min, max]]) => {
-          console.log(min, max)
-          return d[axisName] >= min && d[axisName] <= max
+          //console.log(min+"---"+max)
+          //console.log(d[axisName], axisName)
+          //console.log(d)
+          return d[axisName] >= max && d[axisName] <= min
         });
         //console.log("active", active);
-        d3.select(this).style("stroke", active ? this.selectedColor : this.unselectedColor);
+        d3.select(this).style("stroke", active ? this.selectedColor : "#ddd");
         
         if (active) {
           d3.select(this).raise();
           selected.push(d);
         }
       });
+      console.log(selected);
       svg.property("value", selected).dispatch("input");
     }
-
-    /*
-    rootGroup.selectAll("myAxis")
-      .data(features).enter()
-      .append("g")
-      .attr('id', 'axis-test')
-      .attr('transform', d => `translate(${xScale(d)})`)
-      .each(function(d) { d3.select(this).call(d3.axisLeft().ticks(5).scale(yScales[d])); })
-      .append("text")
-      .style("text-anchor", "middle")
-      .attr("y", 20)
-      .text(d => { 
-        let f = d.substring(0, d.length-2);
-        return this.featureList[f];
-      })
-      .attr("transform", "translate(10, 30) rotate(-15)")
-     
-      .style("fill", "black")
-      .attr('id', 'label-test')
-      */
-  
   }
 
   componentDidMount() {
@@ -159,7 +148,7 @@ class ParallelCoordinates extends React.Component {
   }
 
   clearChart() {
-    d3.select(this.canvasRef.current).select('g#root').selectAll('*').remove();
+    d3.select(this.canvasRef.current).select('svg').selectAll('*').remove();
   }
 
 
@@ -182,7 +171,6 @@ class ParallelCoordinates extends React.Component {
         <div style={{padding: '10px 10px', textAlign: 'center'}}>{text}</div>
         <div style={{height: '100%'}} ref={this.canvasRef}>
           <svg style={{width: '100%', height: '100%'}}>
-            <g id='root'></g>
           </svg>
         </div>
       </div>
