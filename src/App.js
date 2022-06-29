@@ -114,8 +114,11 @@ class App extends React.Component {
                 <Col span={4} >
                   <Card style={{height: firstRowHeight}}>
                     <Feature
+                      countyDataset={this.state.countyDataset}
                       featureList={this.features}
+                      years={this.years}
                       currentFeature={this.state.feature}
+                      currentYear={this.state.year}
                       onSelectFeature={this.selectFeature}
                     />
                   </Card>
