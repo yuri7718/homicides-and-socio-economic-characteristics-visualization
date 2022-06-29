@@ -85,7 +85,7 @@ class Feature extends React.Component {
 
       return (
         <div>
-          <h3>Features and Distributions</h3>
+          <h3>Features and Distributions in 19{this.props.currentYear}</h3>
           <div
             id="scrollableDiv"
             style={{
@@ -122,7 +122,7 @@ class Feature extends React.Component {
     } else {
       return (
         <div>
-          <h3>Features</h3>
+          <h3>Features and Distributions in 19{this.props.currentYear}</h3>
           <div
             id="scrollableDiv"
             style={{
