@@ -111,6 +111,9 @@ class App extends React.Component {
                       currentFeature={this.state.feature}
                       onSelectFeature={this.selectFeature}
                       stateDataset={this.state.stateDataset}
+                      stateCSV={this.state.stateDataset}
+                      countyCSV={this.state.countyDataset}
+                      currentState={this.state.state}
                     />
                   </Card>
                 </Col>

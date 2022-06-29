@@ -1,4 +1,4 @@
-import { Avatar, Divider, List, Skeleton } from 'antd';
+import { Avatar, Divider, List, Skeleton, Row, Col } from 'antd';
 import { useEffect, useState } from 'react';
 import InfiniteScroll from 'react-infinite-scroll-component';
 import React from 'react';
@@ -6,86 +6,76 @@ import * as d3 from 'd3';
 import './Feature.css';
 import { reduce, schemeBlues, tickStep } from 'd3';
 import { isContentEditable } from '@testing-library/user-event/dist/utils';
-import { getAverage } from './Helper';
-import { getStd } from './Helper';
+import { xScale, yScale, getAverage, getStd } from './Helper';
 
 
 class Feature extends React.Component {
   constructor(props) {
     super(props);
+
+    this.canvasRef = React.createRef();
+    this.featureList = {};
+    this.features = this.props.featureList;
   }
 
-drawHisto(data){
-  // set the dimensions and margins of the graph
-  var margin = {top: 10, right: 30, bottom: 30, left: 40},
-  width = 460 - margin.left - margin.right,
-  height = 400 - margin.top - margin.bottom;
+  drawHisto(data) {
+    const {scrollWidth, scrollHeight} = this.canvasRef.current;
 
-  // append the svg object to the body of the page
-  var svg = d3.select("#histo")
-  .append("svg")
-  .attr("width", width + margin.left + margin.right)
-  .attr("height", height + margin.top + margin.bottom)
-  .append("g")
-  .attr("transform",
-        "translate(" + margin.left + "," + margin.top + ")");
+    const margin = {top: 30, right: 30, bottom: 50, left: 70};
+    const width = scrollWidth - margin.left - margin.right;
+    const height = scrollHeight - margin.top - margin.bottom;
 
-  // get the data
-  d3.csv("NAT_states.csv", function(data) {
+    const svg = d3.select(this.canvasRef.current).select('svg')
+      .attr('width', scrollWidth)
+      .attr('height', scrollHeight);
+    const rootGroup = svg.select('g#root')
+      .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-  // X axis: scale and draw:
-  var x = d3.scaleLinear()
-    .domain([0, 1000])     // can use this instead of 1000 to have the max of data: d3.max(data, function(d) { return +d.price })
-    .range([0, width]);
-  svg.append("g")
-    .attr("transform", "translate(0," + height + ")")
-    .call(d3.axisBottom(x));
+    if (this.props.currentState !== '') {
+      data = data.filter(d => d.STATE_NAME === this.props.currentState);
+    }
 
-  // set the parameters for the histogram
-  var histogram = d3.bin()
-    .value(function(d) { return d.price; })   // I need to give the vector of value
-    .domain(x.domain())  // then the domain of the graphic
-    .thresholds(x.ticks(70)); // then the numbers of bins
+    const x = xScale(data, this.props.currentYear, 0, width);
+    const y = yScale(data, this.props.currentFeature, this.props.currentYear, height, 0);
 
-  // And apply this function to data to get the bins
-  var bins = histogram(data);
+    rootGroup.append('g')
+      .attr('transform', `translate(0, ${height} )`)
+      .call(d3.axisBottom(x))
 
-  // Y axis: scale and draw:
-  var y = d3.scaleLinear()
-    .range([height, 0]);
-    y.domain([0, d3.max(bins, function(d) { return d.length; })]);   // d3.hist has to be called before the Y axis obviously
-  svg.append("g")
-    .call(d3.axisLeft(y));
+    const histogram = d3.bin()
+      .value(d => y(Number(d[this.props.currentFeature])))
+      .domain(x.domain()) 
+      .thresholds(x.ticks(70));
 
-  // append the bar rectangles to the svg element
-  svg.selectAll("rect")
+    const bins = histogram(data)
+
+    svg.append("g")
+      .call(d3.axisLeft(y));
+
+    svg.selectAll("rect")
     .data(bins)
-    .enter()
-    .append("rect")
+    .join("rect")
       .attr("x", 1)
-      .attr("transform", function(d) { return "translate(" + x(d.x0) + "," + y(d.length) + ")"; })
-      .attr("width", function(d) { return x(d.x1) - x(d.x0) -1 ; })
-      .attr("height", function(d) { return height - y(d.length); })
-      .style("fill", "#69b3a2")
 
-  });
-}
-
-  /*getStats(data) {
-    var cleanedData = []
-      this.props.featureList.forEach(feature => {
-          this.props.years.forEach(year => {
-              let avg = getAverage(data, feature.key, year);
-              
-              cleanedData.push({value: avg });
-          })
-      });
   }
-  */
 
+  clearChart() {
+    d3.select(this.canvasRef.current).select('#root').selectAll('*').remove();
+  }
 
   render() {
     const features = this.props.featureList;
+
+    if (this.props.stateCSV.length > 0 && this.props.countyCSV.length > 0) {
+
+      if (this.props.currentState === '') {
+        this.clearChart();
+        this.drawHisto(this.props.stateCSV);
+      } else {
+        this.clearChart();
+        this.drawHisto(this.props.countyCSV);
+      }
+    }
 
     return (
       <div>
@@ -113,7 +103,10 @@ drawHisto(data){
                 style={{background: this.props.currentFeature===item.key ? '#7b88b8' : 'white'}}
               >
                 <List.Item.Meta title={item.feature} />
-                <div id="histo">[Statistical Measures]</div>
+                <div ref={this.canvasRef}>
+                  [Statistical Measures]
+                  <svg style={{height: '100%', width: '100%'}}><g id='root'></g></svg>
+                </div>
 
               </List.Item>
             )}
