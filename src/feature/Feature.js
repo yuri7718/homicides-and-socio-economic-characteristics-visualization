@@ -94,11 +94,11 @@ class Feature extends React.Component {
 
     return (
       <div>
-        <h3>Features and Distributions in 19{this.props.currentYear}</h3>
+        <h4 style={{textAlign: 'center'}}>Features and Distributions in 19{this.props.currentYear}</h4>
         <div
           id="scrollableDiv"
           style={{
-            height: 500,
+            height: 550,
             overflow: 'auto',
             border: '1px solid rgba(140, 140, 140, 0.35)'
           }}
