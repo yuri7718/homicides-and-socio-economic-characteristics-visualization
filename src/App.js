@@ -8,7 +8,6 @@ import Feature from './feature/Feature';
 import Time from './time/Time';
 import Map from './map/Map';
 import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
-import { createTooltip } from './tooltip';
 import ScatterPlot from './scatter-plot/ScatterPlot';
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
@@ -33,7 +32,6 @@ class App extends React.Component {
       feature: 'HR',
       year: 60,
       state: '',
-      county: '',
       openModal: true
     };
 
@@ -52,10 +50,8 @@ class App extends React.Component {
     this.years = [60, 70, 80, 90];
 
     this.selectFeature = this.selectFeature.bind(this);
-    //this.selectTime = this.selectTime.bind(this);
     this.selectRegion = this.selectRegion.bind(this);
 
-    //this.tooltip = createTooltip();
     this.statesHexbinDataset = [];
   }
 
@@ -184,7 +180,6 @@ class App extends React.Component {
                       stateCSV={this.state.stateDataset}
                       countyCSV={this.state.countyDataset}
                       currentState={this.state.state}
-                      //currentCounty={this.state.county}
                       currentFeature={this.state.feature}
                       currentYear={this.state.year}
                     />

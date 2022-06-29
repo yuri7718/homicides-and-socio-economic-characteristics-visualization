@@ -105,8 +105,8 @@ class ScatterPlot extends React.Component {
       }
     }
     const title = this.props.currentState === '' ? 
-      ('Correlation between ' + this.featureList[this.props.currentFeature] + ' and homicide rate in US states in 19' + this.props.currentYear) :
-      ('Correlation between ' + this.featureList[this.props.currentFeature] + ' and homicide rate in the state ' + this.props.currentState + ' in 19' + this.props.currentYear);
+      this.featureList[this.props.currentFeature] + ' vs. homicide rate in US states in 19' + this.props.currentYear :
+      this.featureList[this.props.currentFeature] + ' vs. homicide rate in the state ' + this.props.currentState + ' in 19' + this.props.currentYear;
 
     pearson = Number(pearson);
     var explanation = '';

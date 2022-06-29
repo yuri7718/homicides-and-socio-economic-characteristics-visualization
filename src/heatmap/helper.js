@@ -12,7 +12,7 @@ export function getTooltipText(currentState, d) {
   var html = ''
   if (currentState === '') {
     html = 
-      `<div>
+      `<div style="padding: 15px">
         <p>${d.feature}</p>
         <p>Region: The whole country</p>
         <p>Year ${d.year}</p>
