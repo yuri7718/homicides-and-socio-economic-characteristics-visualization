@@ -50,9 +50,6 @@ class Feature extends React.Component {
       yScale.domain([0, d3.max(bins, d => d.length)])
       svg.append('g').call(d3.axisLeft(yScale).tickValues([]));
       
-      bins.forEach(d => {
-        console.log(d)
-      })
       svg.selectAll('rect')
         .data(bins)
         .join('rect')
@@ -85,8 +82,7 @@ class Feature extends React.Component {
 
         this.drawHistogram();
       });
-      //let test = stats.arithmeticMean('HR60');
-      console.log(features)
+
       return (
         <div>
           <h3>Features</h3>

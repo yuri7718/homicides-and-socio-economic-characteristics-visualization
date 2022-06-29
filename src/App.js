@@ -11,6 +11,7 @@ import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
 import { createTooltip } from './tooltip';
 import ScatterPlot from './scatter-plot/ScatterPlot';
 import Heatmap from './map/Heatmap';
+import { cleanDataset  } from './helper';
 
 /**
  * Geojson data
@@ -72,7 +73,7 @@ class App extends React.Component {
 
   fetchData() {
     Promise.all([d3.csv(natCounties), d3.csv(natStates), d3.json(statesHexbinGeojson)]).then(data => {
-      this.setState({countyDataset: data[0], stateDataset: data[1]});
+      this.setState({countyDataset: cleanDataset(data[0], this.years), stateDataset: cleanDataset(data[1], this.years)});
       this.statesHexbinDataset = data[2].features;
     });
   }

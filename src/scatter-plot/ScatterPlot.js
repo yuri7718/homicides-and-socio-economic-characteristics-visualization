@@ -2,6 +2,9 @@ import React from 'react';
 import * as d3 from 'd3';
 import { Row, Col } from 'antd';
 import { xScale, yScale } from './helper';
+import Statistics from 'statistics.js';
+
+console.error = ()=>{};
 
 class ScatterPlot extends React.Component {
   constructor(props) {
@@ -76,11 +79,26 @@ class ScatterPlot extends React.Component {
   }
 
   render() {
+    var pearson = 0;
+    var spearman = 0;
     if (this.props.stateCSV.length > 0 && this.props.countyCSV.length > 0) {
 
       if (this.props.currentState === '') {
         this.clearChart();
         this.drawScatterPlot(this.props.stateCSV);
+
+        const xKey = 'HR' + this.props.currentYear;
+        const yKey = this.props.currentFeature + this.props.currentYear;
+        
+        const columns = {};
+        columns[xKey] = 'interval';
+        columns[yKey] = 'interval';
+      
+        const stats = new Statistics(this.props.stateCSV, columns);
+        pearson = stats.correlationCoefficient(xKey, yKey).correlationCoefficient.toFixed(2);
+        spearman = stats.spearmansRho(xKey, yKey).rho.toFixed(2);
+        console.log(spearman)
+  
       } else {
         this.clearChart();
         this.drawScatterPlot(this.props.countyCSV);
@@ -89,6 +107,8 @@ class ScatterPlot extends React.Component {
     const title = this.props.currentState === '' ? 
       ('Correlation between ' + this.featureList[this.props.currentFeature] + ' and homicide rate in US states in 19' + this.props.currentYear) :
       ('Correlation between ' + this.featureList[this.props.currentFeature] + ' and homicide rate in the state ' + this.props.currentState + ' in 19' + this.props.currentYear);
+    const pearsonCorrelation = pearson;
+    console.log(pearsonCorrelation)
     return (
       <div style={{height: '100%'}}>
         <Row style={{height: '100%'}}>
@@ -99,8 +119,12 @@ class ScatterPlot extends React.Component {
             </div>
           </Col>
           <Col span={4}>
-            <div>[Correlation]</div>
-            <div>[Explanation]</div>
+            <div>
+              <div>Correlation</div>
+              <div>Pearson: {pearson}</div>
+              <div>Spearman: {spearman}</div>
+              <p>[Explanation]</p>
+            </div>
           </Col>
         </Row>
       </div>
