@@ -1,7 +1,7 @@
 import React from 'react';
 import * as d3 from 'd3';
 //import { getColorScale, getExtrema, showMap, hideMap } from './helper';
-import { getAverage } from './helper-heatmap';
+import { getAverage, getTooltipText } from './helper';
 
 class Heatmap extends React.Component {
     constructor(props) {
@@ -24,11 +24,13 @@ class Heatmap extends React.Component {
         this.featureList = {};
 
         this.features = this.props.featureList;
-        /*
-        this.marks = this.props.timeline.reduce((marksDict, year) => {
-            marksDict[year] = '19' + year;
-            return marksDict;
-        }, {});*/
+        
+        this.tooltip = d3.select('body')
+        .append('div')
+        .attr('class', 'tooltip')
+        .style('visibility', 'hidden')
+        .style('left', '0px')
+        .style('top', '0px');
     }
 
 
@@ -108,6 +110,7 @@ class Heatmap extends React.Component {
             .range(['#eff3ff', '#08519c'])
             .domain(d3.extent(cleanedData.map(d => d.value)));
         */
+        const region = this.props.currentState;
         rootGroup.selectAll()
             .data(cleanedData)
             .enter()
@@ -117,6 +120,15 @@ class Heatmap extends React.Component {
             .attr('width', xScale.bandwidth())
             .attr('height', yScale.bandwidth())
             .style('fill', d => colorScales[d.feature](d.value))
+            .on('mouseover', (event, d) => {
+                this.tooltip.style('visibility', 'visible');
+                this.tooltip.html(getTooltipText(this.props.currentState, d))
+                  .style('left', (event.pageX + 10) + 'px')
+                  .style('top', (event.pageY + 10) + 'px');
+              })
+              .on('mouseout', () => {
+                this.tooltip.style('visibility', 'hidden')
+              });
 
         yAxis.selectAll('g').selectAll('text')
             .attr('font-weight', d => {
