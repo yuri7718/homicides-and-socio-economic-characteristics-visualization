@@ -1,8 +1,6 @@
 @import '~antd/dist/antd.css';
 
 
-
-
 .App {
   height: 100%;
   width: 100%;
@@ -50,4 +48,8 @@
 
 .ant-card-body {
   height: 100%;
+}
+
+.tuto-modal {
+    margin-bottom: 20px;
 }
