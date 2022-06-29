@@ -110,6 +110,7 @@ class App extends React.Component {
                       featureList={this.features}
                       currentFeature={this.state.feature}
                       onSelectFeature={this.selectFeature}
+                      stateDataset={this.state.stateDataset}
                     />
                   </Card>
                 </Col>
