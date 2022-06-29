@@ -1,22 +1,20 @@
-import { Avatar, Divider, List, Skeleton } from 'antd';
-import { useEffect, useState } from 'react';
-import InfiniteScroll from 'react-infinite-scroll-component';
 import React from 'react';
-import './Feature.css';
-import { reduce, scaleBand, schemeBlues, tickStep } from 'd3';
-import { isContentEditable } from '@testing-library/user-event/dist/utils';
+import { List } from 'antd';
+import InfiniteScroll from 'react-infinite-scroll-component';
 import Statistics from 'statistics.js';
 import * as d3 from 'd3';
+import './Feature.css';
 
 class Feature extends React.Component {
   constructor(props) {
     super(props);
     this.canvasRef = React.createRef();
-    this.columns = {};
   }
   
+  /**
+   * Iterate through each feature and draw the histogram
+   */
   drawHistogram() {
-    //const { scrollWidth, scrollHeight } = this.canvasRef.current;
 
     this.props.featureList.forEach(feature => {
       let property = feature.key + this.props.currentYear;
@@ -30,13 +28,11 @@ class Feature extends React.Component {
         .attr('height', height + margin.top + margin.bottom)
         .append('g')
         .attr('transform', `translate(${margin.left}, ${margin.top})`);
-      
+
       const xScale = d3.scaleLinear()
-        .domain(d3.extent(this.props.countyDataset.map(d => Number(d[property]))))
+        .domain(d3.extent(this.props.countyDataset.map(d => d[property])))
         .range([0, width]);
 
-      svg.append('g').attr('transform', `translate(0, ${height})`).call(d3.axisBottom(xScale).tickValues([]))
-      
       const histogram = d3.bin()
         .value(d => d[property])
         .domain(xScale.domain())
@@ -45,11 +41,14 @@ class Feature extends React.Component {
       const bins = histogram(this.props.countyDataset);
 
       const yScale = d3.scaleLinear()
+        .domain([0, d3.max(bins, d => d.length)])
         .range([height, 0]);
-
-      yScale.domain([0, d3.max(bins, d => d.length)])
+        
+      // draw axes without ticks
+      svg.append('g').attr('transform', `translate(0, ${height})`).call(d3.axisBottom(xScale).tickValues([]))
       svg.append('g').call(d3.axisLeft(yScale).tickValues([]));
       
+      // draw histogram
       svg.selectAll('rect')
         .data(bins)
         .join('rect')
@@ -57,111 +56,45 @@ class Feature extends React.Component {
         .attr('transform', d => `translate(${xScale(d.x0)}, ${yScale(d.length)})`)
         .attr('width', d => xScale(d.x1) - xScale(d.x0))
         .attr('height', d => height - yScale(d.length))
-        .style('fill', '#69b3a2')
-    })
+        .style('fill', '#69b3a2');
+    });
+  }
 
+  /**
+   * Remove all histograms
+   */
+  cleanHistogram() {
+    this.props.featureList.forEach(feature => {
+      d3.select(`#${feature.key}-histogram`).selectAll('*').remove();
+    })
   }
 
   render() {
-    
-    this.props.featureList.forEach(feature => {
-      this.props.years.forEach(year => {
-        this.columns[feature.key + year] = 'interval';
-      });
-    });
-    
     if (this.props.countyDataset.length > 0) {
-      var stats = new Statistics(this.props.countyDataset, this.columns);
-      const features = this.props.featureList;
+      
+      // compute mean and std with Statistics
+      const columns = {};
+      this.props.featureList.forEach(feature => {
+        this.props.years.forEach(year => {
+          columns[feature.key + year] = 'interval';
+        });
+      });
 
-      features.forEach(feature => {
+      const stats = new Statistics(this.props.countyDataset, columns);
+
+      this.props.featureList.forEach(feature => {
         let property = feature.key + this.props.currentYear;
         feature['mean'] = stats.arithmeticMean(property).toFixed(2);
         feature['std'] = stats.standardDeviation(property).toFixed(2);
-
-
-        this.drawHistogram();
       });
 
-      return (
-        <div>
-          <h3>Features and Distributions in 19{this.props.currentYear}</h3>
-          <div
-            id="scrollableDiv"
-            style={{
-              height: 500,
-              overflow: 'auto',
-              border: '1px solid rgba(140, 140, 140, 0.35)'
-            }}
-          >
-          <InfiniteScroll
-            dataLength={features.length}
-            scrollableTarget="scrollableDiv"
-          >
-            <List
-              dataSource={features}
-              renderItem={(item) => (
-                <List.Item
-                  key={item.key}
-                  accessKey={item.key}
-                  onClick={this.props.onSelectFeature}
-                  style={{background: this.props.currentFeature===item.key ? '#7b88b8' : 'white', padding: '15px'}}
-                >
-                  <List.Item.Meta
-                    title={item.feature}
-                    description={'mean:' + item.mean + ' std:' + item.std}
-                  />
-                  <div><svg ref={this.canvasRef} id={`${item.key}-histogram`} style={{width: 100, height: 100}}></svg></div>
-                </List.Item>
-              )}
-            />
-          </InfiniteScroll>
-        </div>
-      </div>
-      );
-    } else {
-      return (
-        <div>
-          <h3>Features and Distributions in 19{this.props.currentYear}</h3>
-          <div
-            id="scrollableDiv"
-            style={{
-              height: 500,
-              overflow: 'auto',
-              border: '1px solid rgba(140, 140, 140, 0.35)'
-            }}
-          >
-          <InfiniteScroll
-            dataLength={this.props.featureList.length}
-            scrollableTarget="scrollableDiv"
-          >
-            <List
-              dataSource={this.props.featureList}
-              renderItem={(item) => (
-                <List.Item
-                  key={item.key}
-                  accessKey={item.key}
-                  onClick={this.props.onSelectFeature}
-                  style={{background: this.props.currentFeature===item.key ? '#7b88b8' : 'white', padding: '15px'}}
-                >
-                  <List.Item.Meta
-                    title={item.feature}
-                    description={'mean:' + item.mean + ' std:' + item.std}
-                  />
-                  <div><svg ref={this.canvasRef} id={`${item.key}-histogram`} style={{width: 100, height: 100}}></svg></div>
-                </List.Item>
-              )}
-            />
-          </InfiniteScroll>
-        </div>
-      </div>
-      );
+      this.cleanHistogram();
+      this.drawHistogram();
     }
 
-    /*
     return (
       <div>
-        <h3>Features</h3>
+        <h3>Features and Distributions in 19{this.props.currentYear}</h3>
         <div
           id="scrollableDiv"
           style={{
@@ -170,31 +103,31 @@ class Feature extends React.Component {
             border: '1px solid rgba(140, 140, 140, 0.35)'
           }}
         >
-        <InfiniteScroll
-          dataLength={features.length}
-          scrollableTarget="scrollableDiv"
-        >
-          <List
-            dataSource={features}
-            renderItem={(item) => (
-              <List.Item
-                key={item.key}
-                accessKey={item.key}
-                onClick={this.props.onSelectFeature}
-                style={{background: this.props.currentFeature===item.key ? '#7b88b8' : 'white', padding: '15px'}}
-              >
-                <List.Item.Meta
-                  title={item.feature}
-                  description="mean, variance"
-                />
-                <div>[Distribution]</div>
-              </List.Item>
-            )}
-          />
-        </InfiniteScroll>
+          <InfiniteScroll
+            dataLength={this.props.featureList.length}
+            scrollableTarget="scrollableDiv"
+          >
+            <List
+              dataSource={this.props.featureList}
+              renderItem={item => (
+                <List.Item
+                  key={item.key}
+                  accessKey={item.key}
+                  onClick={this.props.onSelectFeature}
+                  style={{background: this.props.currentFeature===item.key ? '#7b88b8' : 'white', padding: '15px'}}
+                >
+                  <List.Item.Meta
+                    title={item.feature}
+                    description={'mean:' + item.mean + ' std:' + item.std}
+                  />
+                  <div ref={this.canvasRef}><svg id={`${item.key}-histogram`} style={{width: 100, height: 100}}></svg></div>
+                </List.Item>
+              )}
+            />
+          </InfiniteScroll>
+        </div>
       </div>
-    </div>
-    );*/
+    );
   }
 }
 
