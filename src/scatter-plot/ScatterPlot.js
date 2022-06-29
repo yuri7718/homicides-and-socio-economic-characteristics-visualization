@@ -107,8 +107,19 @@ class ScatterPlot extends React.Component {
     const title = this.props.currentState === '' ? 
       ('Correlation between ' + this.featureList[this.props.currentFeature] + ' and homicide rate in US states in 19' + this.props.currentYear) :
       ('Correlation between ' + this.featureList[this.props.currentFeature] + ' and homicide rate in the state ' + this.props.currentState + ' in 19' + this.props.currentYear);
-    const pearsonCorrelation = pearson;
-    console.log(pearsonCorrelation)
+
+    pearson = Number(pearson);
+    var explanation = '';
+    if (pearson < -0.5) {
+      console.log('pearson < 0.5')
+      explanation = 'Strong negative correlation';
+    } else if (-0.5 <= pearson && pearson < 0) {
+      explanation = 'Insignificant negative correlation';
+    } else if (0 <= pearson && pearson < 0.5) {
+      explanation = 'Insignificant positive correlation';
+    } else {
+      explanation = 'Strong positive correlation';
+    }
     return (
       <div style={{height: '100%'}}>
         <Row style={{height: '100%'}}>
@@ -120,10 +131,12 @@ class ScatterPlot extends React.Component {
           </Col>
           <Col span={4}>
             <div>
-              <div>Correlation</div>
+              <div><b>Correlation</b></div>
+              <br />
               <div>Pearson: {pearson}</div>
               <div>Spearman: {spearman}</div>
-              <p>[Explanation]</p>
+              <br />
+              <div>{explanation}</div>
             </div>
           </Col>
         </Row>
