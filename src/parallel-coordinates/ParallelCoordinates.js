@@ -3,6 +3,7 @@ import * as d3 from 'd3';
 import { Spin } from 'antd';
 import { getStateData, getYScales } from './helper';
 
+
 class ParallelCoordinates extends React.Component {
   constructor(props) {
     super(props);
@@ -12,6 +13,9 @@ class ParallelCoordinates extends React.Component {
     this.title = '';
 
     this.featureList = {};
+
+    this.selectedColor = 'steelblue';
+    this.unselectedColor = '#ddd';
   }
 
 
@@ -21,8 +25,8 @@ class ParallelCoordinates extends React.Component {
     const {scrollWidth, scrollHeight} = this.canvasRef.current;
 
     const margin = {top: 90, right: 60, bottom: 50, left: 50};
-    const width = scrollWidth - margin.left - margin.right;
-    const height = scrollHeight - margin.top - margin.bottom;
+    const width = scrollWidth;
+    const height = scrollHeight;
 
     if (this.props.currentState !== '') {
       data = data.filter(d => d.STATE_NAME === this.props.currentState);
@@ -32,33 +36,94 @@ class ParallelCoordinates extends React.Component {
       .attr('width', width)
       .attr('height', height)
 
-    const rootGroup = svg.select('g#root');
+    //const rootGroup = svg.select('g#root');
 
-    rootGroup.append('g')
+    svg.append('g')
       .attr('transform', `translate(${margin.left}, ${margin.top})`)
 
     let features = this.props.featureList.map(feature => feature.key + this.props.currentYear);
     //let featureLabels = this.props.featureList.map(feature => feature.feature);
 
-    const yScales = getYScales(data, features, margin.top + height, margin.top);
+    const yScales = getYScales(data, features, height-margin.bottom, margin.top);
+    
+    const axisSpacing = width / features.length;
     const xScale = d3.scalePoint()
-      .range([margin.left, width])
+      .range([margin.left + axisSpacing / 2, width-margin.right - axisSpacing/2])
       .domain(features);
 
-    const path = d => {
+    const line = d => {
       return d3.line()(features.map(feature => {
         const yScale = yScales[feature];
         return [xScale(feature), yScale(Number(d[feature]))];
       }));
     }
-
+    /*
     rootGroup.selectAll('path')
       .data(data)
       .join('path')
-      .attr('d', path)
+      .attr('d', line)
       .style('fill', 'none')
-      .style('stroke', '#69b3a2')
-    console.log(this.featureList);
+      .style('stroke', this.selectedColor)*/
+    
+    const brushWidth = 30;
+    
+    const brush = d3.brushY().extent([
+      [-(brushWidth / 2), margin.top],
+      [brushWidth / 2, height-margin.bottom]
+    ]).on('start brush end', brushed);
+
+
+    const path = svg.append('g')
+      .attr('fill', 'none')
+      .selectAll('path')
+      .data(data)
+      .join('path')
+      .attr('stroke', this.selectedColor)
+      .attr('d', line);
+
+    svg.append('g')
+      .selectAll('g')
+      .data(features)
+      .join('g')
+      .attr('transform', d => `translate(${xScale(d)}, 0)`)
+      .each(function(d) {
+        d3.select(this).call(d3.axisLeft(yScales[d]));
+      })
+      .call(g => 
+        g.append('text')
+          .attr('y', 10)
+          .attr('text-anchor', 'middle')
+          .attr('fill', '#000')
+          .text(d => d)
+      ).call(brush)
+
+    const selections = new Map();
+    function brushed({selection}, axisName) {
+      if (selection === null) {
+        selections.delete(axisName);
+      } else {
+        //console.log(axisName)
+        selections.set(axisName, selection.map(yScales[axisName]));
+      }
+      const selected = [];
+      path.each(function(d) {
+        //console.log(selections)
+        const active = Array.from(selections).every(([axisName, [min, max]]) => {
+          console.log(min, max)
+          return d[axisName] >= min && d[axisName] <= max
+        });
+        //console.log("active", active);
+        d3.select(this).style("stroke", active ? this.selectedColor : this.unselectedColor);
+        
+        if (active) {
+          d3.select(this).raise();
+          selected.push(d);
+        }
+      });
+      svg.property("value", selected).dispatch("input");
+    }
+
+    /*
     rootGroup.selectAll("myAxis")
       .data(features).enter()
       .append("g")
@@ -76,7 +141,7 @@ class ParallelCoordinates extends React.Component {
      
       .style("fill", "black")
       .attr('id', 'label-test')
-      
+      */
   
   }
 
