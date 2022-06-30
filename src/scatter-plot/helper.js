@@ -1,18 +1,13 @@
 import * as d3 from 'd3';
 
-export function xScale(data, currentYear, left, right) {
-  const HR = 'HR';
-  const property = HR + currentYear;
-
+export function xScale(data, property, left, right) {
   return d3.scaleLinear()
-    .domain(d3.extent(data.map(d => Number(d[property]))))
+    .domain(d3.extent(data.map(d => d[property])))
     .range([left, right]); 
 }
 
-export function yScale(data, currentFeature, currentYear, bottom, top) {
-  const property = currentFeature + currentYear;
-  
+export function yScale(data, property, bottom, top) {
   return d3.scaleLinear()
-    .domain(d3.extent(data.map(d => Number(d[property]))))
+    .domain(d3.extent(data.map(d => d[property])))
     .range([bottom, top]);
 }
