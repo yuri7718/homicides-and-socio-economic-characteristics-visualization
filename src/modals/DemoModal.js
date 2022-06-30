@@ -7,7 +7,7 @@ export default function DemoModal() {
 
     return (
         <React.Fragment>
-            <ModalVideo channel='youtube' autoplay isOpen={isOpen} videoId="L61p2uyiMSo" onClose={() => setOpen(false)} />
+            <ModalVideo channel='youtube' autoplay isOpen={isOpen} videoId="pIuDQZ9xECc" onClose={() => setOpen(false)} />
 
             <button style={{ marginTop: '20px' }} className="btn-primary" onClick={() => setOpen(true)}>View Demo</button>
         </React.Fragment>
