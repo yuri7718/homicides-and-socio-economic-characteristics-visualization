@@ -1,4 +1,6 @@
-
+/**
+ * Convert values to numbers to prevent having strings in the dataset
+ */
 export function cleanDataset(dataset, years) {
   const defaultYears = years.map(year => year.toString());
   dataset.forEach(d => {

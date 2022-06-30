@@ -1,8 +1,9 @@
 import React from 'react';
 import * as d3 from 'd3';
-import { getColorScale, getExtrema, showMap, hideMap, getTooltipText, showStateLegend, hideStateLegend, showSVG, hideSVG} from './helper';
+import { getColorScale, getExtrema, showSVG, hideSVG} from './helper';
 import { Segmented, Row, Col, Button } from 'antd';
 import d3legend from 'd3-svg-legend';
+import './Map.css'
 
 class Map extends React.Component {
   constructor(props) {
@@ -16,13 +17,12 @@ class Map extends React.Component {
       map: 'CHOROPLETH',
       region: ''
     }
+    
+    this.canvasRef = React.createRef();
 
     // geojson data
     this.stateGeojson = [];
     this.countyGeojson = [];
-
-    this.canvasRef = React.createRef();
-    this.ZOOM_SCALE_THRESHOLD = 2;
 
     // map id
     this.STATE_ID = 'g-state';
@@ -32,10 +32,10 @@ class Map extends React.Component {
     this.STATE_COLORS = 7;
     this.COUNTY_COLORS = 7;
 
-    this.zoom = Object;
+    this.ZOOM_SCALE_THRESHOLD = 2;
+    this.zoom = undefined;
 
     this.featureList = {};
-
 
     this.tooltip = d3.select('body')
       .append('div')
@@ -52,7 +52,6 @@ class Map extends React.Component {
 
   /**
    * Switch between CHOROPLETH and HEXBIN
-   * @param {string} type 
    */
   toggleMapType = (type) => {
     this.setState({map: type}, () => this.drawMap());
@@ -85,7 +84,7 @@ class Map extends React.Component {
    * Reset region to empty string when the button "Reset selected region" is clicked
    */
   resetSelectedRegion = () => {
-    this.setState({region: ''}, () => this.props.onSelectRegion('', ''));
+    this.setState({region: ''}, () => this.props.onSelectRegion(''));
   }
 
 
@@ -102,22 +101,21 @@ class Map extends React.Component {
 
     const svg = d3.select(this.canvasRef.current).select('svg#map');
 
-    var projection = null;
-
     // draw map
+    var projection = undefined;
     switch(this.state.map) {
       case 'CHOROPLETH':
         projection = d3.geoAlbersUsa()
-          .scale(scrollWidth / 1.2)
-          .translate([scrollWidth / 2, scrollHeight / 2]);
+          .scale(scrollWidth * 1.1)
+          .translate([scrollWidth / 2.1, scrollHeight / 2.2]);
         this.drawChoroplethStates(svg, projection, stateColorScale);
         this.drawChoroplethCounties(svg, projection, countyColorScale);
         break;
 
       case 'HEXBIN':
         projection = d3.geoMercator()
-          .scale(scrollWidth / 1.9)
-          .translate([scrollWidth * 1.37, scrollHeight * 1.05]);
+          .scale(scrollWidth / 1.35)
+          .translate([scrollWidth * 1.75, scrollHeight * 1.25]);
         this.drawHexbinStates(svg, projection, stateColorScale);
         break;
       
@@ -132,10 +130,9 @@ class Map extends React.Component {
       hideSVG(`#${this.COUNTY_ID}`);
     } else {
       // hide map and legend for states
-      hideSVG(`#${this.STATE_ID}`);
-
-      if (this.state.map === 'HEXBIN') {
-        d3.selectAll('.hexbin').style('visibility', 'visible');
+      // HEXBIN does not have counties map, do not hide HEXBIN
+      if (this.state.map === 'CHOROPLETH') {
+        hideSVG(`#${this.STATE_ID}`);
       }
     }
 
@@ -156,6 +153,7 @@ class Map extends React.Component {
       .call(this.zoom.transform, d3.zoomIdentity.translate(this.state.x,this.state.y).scale(this.state.zoomScale));
   }
 
+
   /**
    * Draw legend for both states and counties
    * @param {function} stateColorScale 
@@ -163,21 +161,26 @@ class Map extends React.Component {
    */
   drawLegend(stateColorScale, countyColorScale) {
     
-    var legend = null;
+    var legend = undefined;
 
     // draw legend for states
     legend = d3legend.legendColor()
       .shapeWidth(30)
       .orient('vertical')
       .scale(stateColorScale);
+    
     d3.select('#map-legend').append('g').attr('id', this.STATE_ID).call(legend);
 
-    // draw legend for counties
-    legend = d3legend.legendColor()
-    .shapeWidth(30)
-    .orient('vertical')
-    .scale(countyColorScale);
-    d3.select('#map-legend').append('g').attr('id', this.COUNTY_ID).call(legend);
+    if (this.state.map === 'CHOROPLETH') {
+      // draw legend for counties
+      legend = d3legend.legendColor()
+      .shapeWidth(30)
+      .orient('vertical')
+      .scale(countyColorScale);
+      
+      d3.select('#map-legend').append('g').attr('id', this.COUNTY_ID).call(legend);
+    }
+
   }
 
 
@@ -188,6 +191,7 @@ class Map extends React.Component {
    * @param {*} colorScale 
    */
   drawChoroplethStates(svg, projection, colorScale) {
+
     const path = d3.geoPath().projection(projection);
 
     svg.append('g')
@@ -200,12 +204,13 @@ class Map extends React.Component {
       .attr('fill', d => colorScale(d.properties[this.state.property]))
       .style('stroke', '#000')
       .on('click', (event, d) => {
-        this.props.onSelectRegion(d.properties.STATE_NAME, '');
+        this.props.onSelectRegion(d.properties.STATE_NAME);
         this.setState({region: d.properties.STATE_NAME});
       })
       .on('mouseover', (event, d) => {
         this.tooltip.style('visibility', 'visible');
-        this.tooltip.html(this.getTooltipText(
+        this.tooltip.html(
+          this.getTooltipText(
             d.properties.STATE_NAME,
             this.props.currentFeature,
             d.properties[this.state.property],
@@ -213,9 +218,7 @@ class Map extends React.Component {
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY + 10) + 'px');
       })
-      .on('mouseout', () => {
-        this.tooltip.style('visibility', 'hidden')
-      });
+      .on('mouseout', () => this.tooltip.style('visibility', 'hidden'));
   }
 
   /**
@@ -225,6 +228,7 @@ class Map extends React.Component {
    * @param {*} colorScale 
    */
   drawChoroplethCounties(svg, projection, colorScale) {
+
     const path = d3.geoPath().projection(projection);
 
     svg.append('g')
@@ -237,21 +241,20 @@ class Map extends React.Component {
       .attr('fill', d => colorScale(d.properties[this.state.property]))
       .style('stroke', '#000')
       .on('click', (event, d) => {
-        this.props.onSelectRegion(d.properties.STATE_NAME, d.properties.NAME);
-        this.setState({region: d.properties.NAME + ', ' + d.properties.STATE_NAME});
+        this.props.onSelectRegion(d.properties.STATE_NAME);
+        this.setState({region: d.properties.STATE_NAME});
       })
       .on('mouseover', (event, d) => {
         this.tooltip.style('visibility', 'visible');
-        this.tooltip.html(this.getTooltipText(d.properties.NAME + ', ' + d.properties.STATE_NAME,
+        this.tooltip.html(
+          this.getTooltipText(
+            d.properties.NAME + ', ' + d.properties.STATE_NAME,
             this.props.currentFeature,
             d.properties[this.state.property],
             this.props.currentYear))
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY + 10) + 'px');
-      })
-      .on('mouseout', (event, d) => {
-        this.tooltip.style('visibility', 'hidden')
-      });
+      }).on('mouseout', () => this.tooltip.style('visibility', 'hidden'));
   }
 
   /**
@@ -261,6 +264,7 @@ class Map extends React.Component {
    * @param {*} colorScale 
    */
   drawHexbinStates(svg, projection, colorScale) {
+
     const path = d3.geoPath().projection(projection);
 
     svg.append('g')
@@ -274,22 +278,22 @@ class Map extends React.Component {
       .attr('fill', d => colorScale(d.properties[this.state.property]))
       .style('stroke', '#000')
       .on('click', (event, d) => {
-        this.props.onSelectRegion(d.properties.STATE_NAME, '');
+        this.props.onSelectRegion(d.properties.STATE_NAME);
         this.setState({region: d.properties.STATE_NAME});
       })
       .on('mouseover', (event, d) => {
-        this.tooltip
-          .style('visibility', 'visible');
-        this.tooltip.html(this.getTooltipText(d.properties.STATE_NAME,
-            this.props.currentFeature, d.properties[this.state.property],
+        this.tooltip.style('visibility', 'visible');
+        this.tooltip.html(
+          this.getTooltipText(
+            d.properties.STATE_NAME,
+            this.props.currentFeature,
+            d.properties[this.state.property],
             this.props.currentYear))
           .style('left', (event.pageX + 10) + 'px')
           .style('top', (event.pageY + 10) + 'px');
-      })
-      .on('mouseout', () => {
-        this.tooltip.style('visibility', 'hidden')
-      });
+      }).on('mouseout', () => this.tooltip.style('visibility', 'hidden'));
 
+      // write states abbreviations
       svg.append('g')
         .selectAll('labels')
         .data(this.props.stateHexbin)
@@ -299,9 +303,7 @@ class Map extends React.Component {
         .text(d => d.properties.iso3166_2)
         .attr('text-anchor', 'middle')
         .attr('alignment-baseline', 'central')
-      
   }
-
 
 
   /**
@@ -313,10 +315,9 @@ class Map extends React.Component {
     if (zoomScale > this.ZOOM_SCALE_THRESHOLD && this.state.showState === true) {
       // change to county view
       this.setState({showState: false}, () => {
-        hideSVG(`#${this.STATE_ID}`)
-        showSVG(`#${this.COUNTY_ID}`)
-        if (this.state.map === 'HEXBIN') {
-          d3.selectAll('.hexbin').style('visibility', 'visible');
+        if (this.state.map === 'CHOROPLETH') {
+          hideSVG(`#${this.STATE_ID}`)
+          showSVG(`#${this.COUNTY_ID}`)
         }
       });
     } else if (zoomScale <= this.ZOOM_SCALE_THRESHOLD && this.state.showState === false) {
@@ -332,8 +333,8 @@ class Map extends React.Component {
     const roundedValue = value.toFixed(2);
     const html =
     `<div>
-      <p><b>${region}<b></p>
-      <p><b>${this.featureList[feature]}: </b>${roundedValue}<p>
+      <p style="text-align: center"><b>${region}</b></p>
+      <p><b>${this.featureList[feature]}: </b>${roundedValue}</p>
       <p><b>Year: </b>19${year}</p>
     </div>`
     return html;
@@ -357,7 +358,6 @@ class Map extends React.Component {
     Promise.all([d3.json(this.props.stateGeojson), d3.json(this.props.countyGeojson)]).then(data => {
       this.stateGeojson = data[0].features;
       this.countyGeojson = data[1].features;
-      this.us = data[0];
       this.drawMap();
     }).catch(err => console.log("error", err));
   
@@ -366,9 +366,7 @@ class Map extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     const property = this.props.currentFeature + this.props.currentYear;
     if (prevState.property !== property) {
-      this.setState({property: property});
-      //d3.select('svg#legend').selectAll('*').remove();
-      this.drawMap();
+      this.setState({property: property}, () => this.drawMap());
     }
   }
 
