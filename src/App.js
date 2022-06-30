@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import './App.css';
 import { Layout, Row, Col, Card } from 'antd';
 import * as d3 from 'd3';
@@ -7,12 +7,12 @@ import natStates from './assets/NAT_states.csv';
 import Feature from './feature/Feature';
 import Time from './time/Time';
 import Map from './map/Map';
+import Heatmap from './heatmap/Heatmap';
 import ParallelCoordinates from './parallel-coordinates/ParallelCoordinates';
 import ScatterPlot from './scatter-plot/ScatterPlot';
+import TutorialModalComponent from './modals/TutorialModalComponent'
 import { Modal } from 'react-responsive-modal';
 import 'react-responsive-modal/styles.css';
-import TutorialModalComponent from './modals/TutorialModalComponent'
-import Heatmap from './heatmap/Heatmap';
 import { cleanDataset  } from './helper';
 
 /**
@@ -47,15 +47,12 @@ class App extends React.Component {
       { key: 'GI', feature: 'Gini index' },
       { key: 'FH', feature: 'Percentage of female headed households' }
     ];
-    this.years = [60, 70, 80, 90];
 
-    this.selectFeature = this.selectFeature.bind(this);
-    this.selectRegion = this.selectRegion.bind(this);
+    this.years = [60, 70, 80, 90];
 
     this.statesHexbinDataset = [];
   }
 
-  ////////////////////////////////////////////////////
   onClickButton = e => {
     e.preventDefault()
     this.setState({ openModal: true })
@@ -65,7 +62,7 @@ class App extends React.Component {
     this.setState({ openModal: false })
   }
 
-  selectFeature(e) {
+  selectFeature = (e) => {
     e.preventDefault();
     this.setState({ feature: e.currentTarget.accessKey });
   }
@@ -74,23 +71,15 @@ class App extends React.Component {
     this.setState({ year: year });
   };
 
-  selectRegion(state, county) {
-    this.setState({ state: state, county: county })
-  }
-
-  componentDidMount() {
+  selectRegion = (state) => {
+    this.setState({ state: state });
   }
 
   fetchData() {
-
     Promise.all([d3.csv(natCounties), d3.csv(natStates), d3.json(statesHexbinGeojson)]).then(data => {
       this.setState({countyDataset: cleanDataset(data[0], this.years), stateDataset: cleanDataset(data[1], this.years)});
       this.statesHexbinDataset = data[2].features;
     });
-  }
-
-  componentDidUpdate() {
-    //console.log(this.state)
   }
 
   render() {
@@ -99,25 +88,21 @@ class App extends React.Component {
     }
     const firstRowHeight = 700;
     const secondRowHeight = 1080 - firstRowHeight - 30 - 12;
-    //console.log(this.state)
+
     return (
-
       <div className="App">
-
         <Layout className="layout">
           <Row gutter={[6, 6]}>
             <Col span={24}>
               <Row gutter={6}>
                 <Col span={4} >
                   <Card style={{ height: firstRowHeight }}>
-
                     <div className="tuto-modal">
                       <button onClick={this.onClickButton}>Need Help?</button>
                       <Modal open={this.state.openModal} onClose={this.onCloseModal}>
                         <TutorialModalComponent />
                       </Modal>
                     </div>
-
                     <Feature
                       countyDataset={this.state.countyDataset}
                       featureList={this.features}
@@ -136,13 +121,11 @@ class App extends React.Component {
                     />
                     <Map
                       stateGeojson={statesGeojson}
-                      stateDataset={this.state.stateDataset}
                       countyGeojson={natGeojson}
                       currentFeature={this.state.feature}
                       currentYear={this.state.year}
                       years={this.years}
                       onSelectRegion={this.selectRegion}
-                      //tooltip={this.tooltip}
                       featureList={this.features}
                       stateHexbin={this.statesHexbinDataset}
                     />
@@ -167,8 +150,8 @@ class App extends React.Component {
                     <ParallelCoordinates
                       featureList={this.features}
                       stateCSV={this.state.stateDataset}
-                      currentYear={this.state.year}
                       countyCSV={this.state.countyDataset}
+                      currentYear={this.state.year}
                       currentState={this.state.state}
                     />
                   </Card>

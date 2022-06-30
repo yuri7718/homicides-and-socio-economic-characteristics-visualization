@@ -8,7 +8,7 @@ class Time extends React.Component {
     this.marks = this.props.timeline.reduce((marksDict, year) => {
       marksDict[year] = '19' + year;
       return marksDict;
-  }, {});
+    }, {});
   }
   
   render() {

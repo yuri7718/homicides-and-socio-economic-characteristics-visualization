@@ -4,7 +4,7 @@ import { Row, Col } from 'antd';
 import { xScale, yScale } from './helper';
 import Statistics from 'statistics.js';
 
-console.error = ()=>{};
+console.error = () => {};
 
 class ScatterPlot extends React.Component {
   constructor(props) {
@@ -24,16 +24,17 @@ class ScatterPlot extends React.Component {
     const svg = d3.select(this.canvasRef.current).select('svg')
       .attr('width', scrollWidth)
       .attr('height', scrollHeight);
+
     const rootGroup = svg.select('g#root')
       .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    if (this.props.currentState !== '') {
-      data = data.filter(d => d.STATE_NAME === this.props.currentState);
-    }
+    const xProperty = 'HR' + this.props.currentYear;
+    const yProperty = this.props.currentFeature + this.props.currentYear;
 
-    const x = xScale(data, this.props.currentYear, 0, width);
-    const y = yScale(data, this.props.currentFeature, this.props.currentYear, height, 0);
+    const x = xScale(data, xProperty, 0, width);
+    const y = yScale(data, yProperty, height, 0);
 
+    // draw axes
     rootGroup.append('g')
       .attr('transform', `translate(0, ${height} )`)
       .call(d3.axisBottom(x))
@@ -41,27 +42,27 @@ class ScatterPlot extends React.Component {
     rootGroup.append('g')
       .call(d3.axisLeft(y));
 
-    const xProperty = 'HR' + this.props.currentYear;
-    const yProperty = this.props.currentFeature + this.props.currentYear;
-
+    // draw scatter plot
     rootGroup.append('g')
       .selectAll('dot')
       .data(data)
       .join('circle')
-      .attr('cx', d => x(Number(d[xProperty])))
-      .attr('cy', d => y(Number(d[yProperty])))
+      .attr('cx', d => x(d[xProperty]))
+      .attr('cy', d => y(d[yProperty]))
       .attr('r', 3)
       .style('fill', '#69b3a2')
 
+    // x-axis label
     rootGroup.append('text')
       .attr('x', width / 2)
       .attr('y', height + 30)
       .attr('text-anchor', 'middle')
       .text('Homicide rate')
 
+    // y-axis label
     rootGroup.append('text')
       .attr('transform', 'rotate(-90)')
-      .attr('x', -height/2)
+      .attr('x', -height / 2)
       .attr('y', -35)
       .attr('text-anchor', 'middle')
       .text(this.featureList[this.props.currentFeature])
@@ -73,62 +74,45 @@ class ScatterPlot extends React.Component {
   }
 
   componentDidMount() {
+    // reorganize feature list to retrieve feature name using acronym
     this.props.featureList.forEach(feature => {
       this.featureList[feature.key] = feature.feature;
     });
   }
 
   render() {
-    var pearson = 0;
-    var spearman = 0;
+    var pearson = undefined;
+    var spearman = undefined;
+
     if (this.props.stateCSV.length > 0 && this.props.countyCSV.length > 0) {
-
-      if (this.props.currentState === '') {
-        this.clearChart();
-        this.drawScatterPlot(this.props.stateCSV);
-
-        const xKey = 'HR' + this.props.currentYear;
-        const yKey = this.props.currentFeature + this.props.currentYear;
-        
-        const columns = {};
-        columns[xKey] = 'interval';
-        columns[yKey] = 'interval';
       
-        const stats = new Statistics(this.props.stateCSV, columns);
-        pearson = stats.correlationCoefficient(xKey, yKey).correlationCoefficient.toFixed(2);
-        spearman = stats.spearmansRho(xKey, yKey).rho.toFixed(2);
-  
-      } else {
-        this.clearChart();
-        this.drawScatterPlot(this.props.countyCSV);
+      // filter the dataset if a state is selected
+      const data = this.props.currentState === '' ?
+        this.props.stateCSV : 
+        this.props.countyCSV.filter(d => d.STATE_NAME === this.props.currentState);
 
-        const xKey = 'HR' + this.props.currentYear;
-        const yKey = this.props.currentFeature + this.props.currentYear;
-        
-        const columns = {};
-        columns[xKey] = 'interval';
-        columns[yKey] = 'interval';
+      this.clearChart();
+      this.drawScatterPlot(data);
+
+      const xKey = 'HR' + this.props.currentYear;
+      const yKey = this.props.currentFeature + this.props.currentYear;
       
-        console.log("stateCSV", this.props.stateCSV)
+      const columns = {};
+      columns[xKey] = 'interval';
+      columns[yKey] = 'interval';
 
-        const data = this.props.countyCSV.filter(d => d.STATE_NAME === this.props.currentState);
-        console.log("filtered", data);
-        const stats = new Statistics(data, columns);
-        pearson = stats.correlationCoefficient(xKey, yKey).correlationCoefficient.toFixed(2);
-        spearman = stats.spearmansRho(xKey, yKey).rho.toFixed(2);
-        console.log(pearson)
-        console.log(spearman)
-
-      }
+      const stats = new Statistics(data, columns);
+      pearson = stats.correlationCoefficient(xKey, yKey).correlationCoefficient.toFixed(2);
+      spearman = stats.spearmansRho(xKey, yKey).rho.toFixed(2);
     }
+
     const title = this.props.currentState === '' ? 
       this.featureList[this.props.currentFeature] + ' vs. homicide rate in US states in 19' + this.props.currentYear :
-      this.featureList[this.props.currentFeature] + ' vs. homicide rate in the state ' + this.props.currentState + ' in 19' + this.props.currentYear;
+      this.featureList[this.props.currentFeature] + ' vs. homicide rate in ' + this.props.currentState + ' state in 19' + this.props.currentYear;
 
     pearson = Number(pearson);
-    var explanation = '';
+    var explanation = '[explanation]';
     if (pearson < -0.5) {
-      console.log('pearson < 0.5')
       explanation = 'Strong negative correlation';
     } else if (-0.5 <= pearson && pearson < 0) {
       explanation = 'Insignificant negative correlation';
@@ -137,6 +121,7 @@ class ScatterPlot extends React.Component {
     } else {
       explanation = 'Strong positive correlation';
     }
+
     return (
       <div style={{height: '100%'}}>
         <Row style={{height: '100%'}}>
@@ -148,11 +133,9 @@ class ScatterPlot extends React.Component {
           </Col>
           <Col span={4}>
             <div>
-              <div><b>Correlation</b></div>
-              <br />
+              <div><b>Correlation</b></div><br/>
               <div>Pearson: {pearson}</div>
-              <div>Spearman: {spearman}</div>
-              <br />
+              <div>Spearman: {spearman}</div><br/>
               <div>{explanation}</div>
             </div>
           </Col>

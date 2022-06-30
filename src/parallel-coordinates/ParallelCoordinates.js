@@ -1,7 +1,5 @@
 import React from 'react';
 import * as d3 from 'd3';
-import { Spin } from 'antd';
-import { getStateData, getYScales } from './helper';
 
 
 class ParallelCoordinates extends React.Component {
@@ -9,15 +7,11 @@ class ParallelCoordinates extends React.Component {
     super(props);
 
     this.canvasRef = React.createRef();
-
-    this.title = '';
-
     this.featureList = {};
 
+    // color for selection using brush
     this.selectedColor = 'steelblue';
-    this.unselectedColor = '#ddd';
   }
-
 
 
   drawParallelCoordinates(data) {
@@ -28,52 +22,31 @@ class ParallelCoordinates extends React.Component {
     const width = scrollWidth;
     const height = scrollHeight;
 
-    if (this.props.currentState !== '') {
-      data = data.filter(d => d.STATE_NAME === this.props.currentState);
-    }
-
     const svg = d3.select(this.canvasRef.current).select('svg')
       .attr('width', width)
-      .attr('height', height)
-
-    //const rootGroup = svg.select('g#root');
-
+      .attr('height', height);
 
     svg.append('g')
-      .attr('transform', `translate(${margin.left}, ${margin.top})`)
+      .attr('transform', `translate(${margin.left}, ${margin.top})`);
 
-    let features = this.props.featureList.map(feature => feature.key + this.props.currentYear);
-    //let featureLabels = this.props.featureList.map(feature => feature.feature);
-    //console.log(features);
-    const yScales = getYScales(data, features, height-margin.bottom, margin.top);
+    // in form of [HR60, UE60, ...]
+    const features = this.props.featureList.map(feature => feature.key + this.props.currentYear);
+
+    const yScales = this.getYScales(data, features, height - margin.bottom, margin.top);
     
     const axisSpacing = width / features.length;
     const xScale = d3.scalePoint()
-      .range([margin.left + axisSpacing / 2, width-margin.right - axisSpacing/2])
+      .range([margin.left + axisSpacing / 2, width - margin.right - axisSpacing / 2])
       .domain(features);
 
     const line = d => {
       return d3.line()(features.map(feature => {
         const yScale = yScales[feature];
-        return [xScale(feature), yScale(Number(d[feature]))];
+        return [xScale(feature), yScale(d[feature])];
       }));
     }
-    /*
-    rootGroup.selectAll('path')
-      .data(data)
-      .join('path')
-      .attr('d', line)
-      .style('fill', 'none')
-      .style('stroke', this.selectedColor)*/
     
-    const brushWidth = 30;
-    
-    const brush = d3.brushY().extent([
-      [-(brushWidth / 2), margin.top],
-      [brushWidth / 2, height-margin.bottom]
-    ]).on('start brush end', brushed);
-
-
+    // draw lines
     const path = svg.append('g')
       .attr('fill', 'none')
       .selectAll('path')
@@ -82,70 +55,78 @@ class ParallelCoordinates extends React.Component {
       .attr('stroke', this.selectedColor)
       .attr('d', line);
 
+    const brushWidth = 30;
+    
+    const brush = d3.brushY().extent([
+      [-(brushWidth / 2), margin.top],
+      [brushWidth / 2, height-margin.bottom]
+    ]).on('start brush end', brushed);
+
+    // draw axes
     svg.append('g')
       .selectAll('g')
       .data(features)
       .join('g')
       .attr('transform', d => `translate(${xScale(d)}, 0)`)
-      .each(function(d) {
-        d3.select(this).call(d3.axisLeft(yScales[d]));
-      })
+      .each(function(d) { d3.select(this).call(d3.axisLeft(yScales[d])); })
       .call(g => 
         g.append('text')
           .attr('y', 10)
           .attr('text-anchor', 'middle')
           .attr('fill', '#000')
-          .text(d => {
-            let f = d.substring(0, d.length-2);
-            return this.featureList[f];
-          })
-          .attr("transform", "translate(5, 15) rotate(-10)")
-      ).call(brush)
+          .text(d => this.featureList[d.substring(0, d.length-2)])
+          .attr('transform', 'translate(5, 15) rotate(-10)')
+      ).call(brush);
 
     const selections = new Map();
+
     function brushed({selection}, axisName) {
-      //console.log(axisName);
-      //selection is screen coordinates interval
       if (selection === null) {
         selections.delete(axisName);
       } else {
-        //console.log(axisName)
         selections.set(axisName, selection.map(yScales[axisName].invert));
       }
       const selected = [];
       path.each(function(d) {
-        //console.log(selections)
         const active = Array.from(selections).every(([axisName, [min, max]]) => {
-          //console.log(min+"---"+max)
-          //console.log(d[axisName], axisName)
-          //console.log(d)
-          return d[axisName] >= max && d[axisName] <= min
+          return d[axisName] >= max && d[axisName] <= min;
         });
-        //console.log("active", active);
-        d3.select(this).style("stroke", active ? this.selectedColor : "#ddd");
+
+        d3.select(this).style("stroke", active ? this.selectedColor : '#ddd');
         
         if (active) {
           d3.select(this).raise();
           selected.push(d);
         }
       });
-      console.log(selected);
-      svg.property("value", selected).dispatch("input");
+      svg.property('value', selected).dispatch('input');
     }
   }
+
+
+  /**
+   * Create and return a dictionary of yScales where key is feature 
+   */
+  getYScales(data, features, bottom, top) {
+    const scales = {};
+
+    features.forEach(feature => {
+      scales[feature] = d3.scaleLinear()
+        .domain(d3.extent(data, item => item[feature]))
+        .range([bottom, top]);
+    });
+
+    return scales;
+  }
+
 
   componentDidMount() {
+    // reorganize feature list to retrieve feature name using acronym
     this.props.featureList.forEach(feature => {
       this.featureList[feature.key] = feature.feature;
-    })
-
+    });
   }
 
-  componentDidUpdate(prevProps, prevState) { 
-    if (prevProps.currentState !== this.props.currentState) {
-      //console.log(this.props.currentState)
-    }
-  }
 
   clearChart() {
     d3.select(this.canvasRef.current).select('svg').selectAll('*').remove();
@@ -155,23 +136,25 @@ class ParallelCoordinates extends React.Component {
   render() {
   
     if (this.props.stateCSV.length > 0 && this.props.countyCSV.length > 0) {
-      if (this.props.currentState === '') {
-        this.clearChart();
-        this.drawParallelCoordinates(this.props.stateCSV);
-      } else {
-        this.clearChart();
-        this.drawParallelCoordinates(this.props.countyCSV);
-      }
+
+      // filter the dataset if a state is selected
+      const data = this.props.currentState === '' ?
+        this.props.stateCSV :
+        this.props.countyCSV.filter(d => d.STATE_NAME === this.props.currentState);
+      
+      this.clearChart();
+      this.drawParallelCoordinates(data);
     }
-    const text = this.props.currentState === '' ?
-      ('US states socio-economic characteristics in 19' +  this.props.currentYear) :
-      this.props.currentState + ' socio-economic characteristics in 19' + this.props.currentYear;
+    // create title based on selected state
+    const title = this.props.currentState === '' ?
+      'US States Socio-economic Characteristics in 19' +  this.props.currentYear :
+      this.props.currentState + ' Socio-economic Characteristics in 19' + this.props.currentYear;
+    
     return (
       <div style={{height: '100%'}}>
-        <div style={{padding: '10px 10px', textAlign: 'center'}}>{text}</div>
+        <div style={{padding: '5px 5px', textAlign: 'center'}}>{title}</div>
         <div style={{height: '100%'}} ref={this.canvasRef}>
-          <svg style={{width: '100%', height: '100%'}}>
-          </svg>
+          <svg></svg>
         </div>
       </div>
     )
