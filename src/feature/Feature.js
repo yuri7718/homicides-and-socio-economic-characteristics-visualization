@@ -5,6 +5,9 @@ import Statistics from 'statistics.js';
 import * as d3 from 'd3';
 import './Feature.css';
 
+/**
+ * Component for selecting feature
+ */
 class Feature extends React.Component {
   constructor(props) {
     super(props);

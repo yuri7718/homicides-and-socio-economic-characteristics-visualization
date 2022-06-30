@@ -5,6 +5,9 @@ import { Segmented, Row, Col, Button } from 'antd';
 import d3legend from 'd3-svg-legend';
 import './Map.css'
 
+/**
+ * Choropleth map and hexbin map
+ */
 class Map extends React.Component {
   constructor(props) {
     super(props);

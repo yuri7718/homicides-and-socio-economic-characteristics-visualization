@@ -2,6 +2,9 @@ import React from 'react';
 import * as d3 from 'd3';
 import { getAverage, getTooltipText } from './helper';
 
+/**
+ * Heat map showing all features vs. time for selected region
+ */
 class Heatmap extends React.Component {
   constructor(props) {
     super(props);

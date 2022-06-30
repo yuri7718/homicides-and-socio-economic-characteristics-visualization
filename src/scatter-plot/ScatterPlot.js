@@ -6,6 +6,9 @@ import Statistics from 'statistics.js';
 
 console.error = () => {};
 
+/**
+ * Scatter plot for correlation between selected feature and homicide rate
+ */
 class ScatterPlot extends React.Component {
   constructor(props) {
     super(props);
