@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "/ncovr-visualization/static/css/main.8fb0e0e9.css",
-    "main.js": "/ncovr-visualization/static/js/main.170da3de.js",
+    "main.js": "/ncovr-visualization/static/js/main.481936ab.js",
     "static/js/787.42f4de7b.chunk.js": "/ncovr-visualization/static/js/787.42f4de7b.chunk.js",
     "static/media/NAT.geojson": "/ncovr-visualization/static/media/NAT.8357abed5dbf7889b938.geojson",
     "static/media/NAT_counties.csv": "/ncovr-visualization/static/media/NAT_counties.c43a11663b00a85cae5f.csv",
@@ -10,11 +10,11 @@
     "static/media/NAT_states.csv": "/ncovr-visualization/static/media/NAT_states.5c31973166cdd599b72b.csv",
     "index.html": "/ncovr-visualization/index.html",
     "main.8fb0e0e9.css.map": "/ncovr-visualization/static/css/main.8fb0e0e9.css.map",
-    "main.170da3de.js.map": "/ncovr-visualization/static/js/main.170da3de.js.map",
+    "main.481936ab.js.map": "/ncovr-visualization/static/js/main.481936ab.js.map",
     "787.42f4de7b.chunk.js.map": "/ncovr-visualization/static/js/787.42f4de7b.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.8fb0e0e9.css",
-    "static/js/main.170da3de.js"
+    "static/js/main.481936ab.js"
   ]
 }
