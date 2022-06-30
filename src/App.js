@@ -167,8 +167,8 @@ class App extends React.Component {
                     <ParallelCoordinates
                       featureList={this.features}
                       stateCSV={this.state.stateDataset}
-                      currentYear={this.state.year}
                       countyCSV={this.state.countyDataset}
+                      currentYear={this.state.year}
                       currentState={this.state.state}
                     />
                   </Card>
