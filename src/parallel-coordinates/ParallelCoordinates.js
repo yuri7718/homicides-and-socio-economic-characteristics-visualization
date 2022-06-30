@@ -22,7 +22,7 @@ class ParallelCoordinates extends React.Component {
 
     const margin = {top: 50, right: 50, bottom: 50, left: 20};
     const width = scrollWidth;
-    const height = scrollHeight;
+    const height = scrollHeight - 30; // prevent change in scrollHeight on chrome
 
     const svg = d3.select(this.canvasRef.current).select('svg')
       .attr('width', width)
